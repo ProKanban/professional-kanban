@@ -1,0 +1,97 @@
+# License
+
+This repository contains two kinds of material under two different licenses.
+
+---
+
+## 1. Documentation and guidance content
+
+**Licensed under Creative Commons Attribution-ShareAlike 4.0 International
+(CC BY-SA 4.0).**
+
+This covers:
+
+- `professional-kanban/SKILL.md`
+- `professional-kanban/references/`
+- `README.md`
+
+Full legal text: https://creativecommons.org/licenses/by-sa/4.0/legalcode
+Human-readable summary: https://creativecommons.org/licenses/by-sa/4.0/
+
+### Why ShareAlike
+
+This material is a derivative work of **The Kanban Guide** (May 2025), copyright
+Orderly Disruption Limited and Daniel S. Vacanti, Inc., which is itself licensed
+CC BY-SA 4.0. ShareAlike requires derivative works to be distributed under the same
+license, so this content is licensed the same way.
+
+### What that means for you
+
+You may share and adapt this content, including commercially, provided you:
+
+- **Give appropriate credit** — see the attribution notice below
+- **Indicate if changes were made**
+- **Distribute your adaptations under CC BY-SA 4.0** as well
+
+### Attribution notice
+
+When redistributing or adapting this content, include a notice substantially as
+follows:
+
+> "Professional Kanban skill" by Liz Rettig, ProKanban.org, licensed under
+> CC BY-SA 4.0. Derived from The Kanban Guide (May 2025) by Orderly Disruption
+> Limited and Daniel S. Vacanti, Inc., licensed under CC BY-SA 4.0, and from the
+> Kanban Pocket Guide and Flow Forecasting Pocket Guide, ProKanban.org.
+
+---
+
+## 2. Scripts
+
+**Licensed under the MIT License.**
+
+This covers everything in `professional-kanban/scripts/`.
+
+Creative Commons recommends against applying CC licenses to software, and the
+scripts implement statistical methods — Monte Carlo sampling and nearest-rank
+percentiles — rather than reproducing text from the source guides. They are
+therefore released separately under MIT so they can be freely embedded in other
+tools.
+
+```
+MIT License
+
+Copyright (c) 2026 ProKanban.org
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+---
+
+## 3. Sample data
+
+The CSV files in `professional-kanban/assets/` are synthetic, generated for
+demonstration. They describe no real team and are placed in the public domain
+(CC0 1.0) — use them freely in training material.
+
+---
+
+## Trademarks
+
+This license covers copyright only. It grants no rights in the ProKanban.org name,
+logo, or the Professional Kanban Trainer (PKT) and related certification marks.
