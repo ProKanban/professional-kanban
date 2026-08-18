@@ -1,0 +1,4 @@
+# Packaged release artifacts (built by `zip -r professional-kanban.zip professional-kanban/`
+# and renamed to .skill). These live only on GitHub Releases, not in git history.
+professional-kanban.zip
+professional-kanban.skill
