@@ -10,10 +10,10 @@ trials, and report the distribution. Never reports a single run.
 
 Usage
 -----
-  python monte_carlo.py how-many --input done.csv --days 30
-  python monte_carlo.py how-many --input done.csv --by 2026-10-15
-  python monte_carlo.py when --input done.csv --items 50
-  python monte_carlo.py when --input done.csv --items 50 --start 2026-09-01
+  python3 monte_carlo.py how-many --input done.csv --days 30
+  python3 monte_carlo.py how-many --input done.csv --by 2026-10-15
+  python3 monte_carlo.py when --input done.csv --items 50
+  python3 monte_carlo.py when --input done.csv --items 50 --start 2026-09-01
 
 Input
 -----

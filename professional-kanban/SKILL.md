@@ -45,18 +45,24 @@ Do not simulate Monte Carlo in your head, and do not estimate percentiles by eye
 Both are the exact failure this skill exists to prevent. The scripts are standard
 library only — no install step, no pandas.
 
+The scripts live inside the skill directory. Reference them by full path so
+they work no matter what the assistant's current directory is, and leave
+`--input` pointing at the user's CSV wherever they actually have it. The path
+below is the user-scope install; substitute `.claude/skills/professional-kanban/scripts/`
+if the skill is installed at project scope.
+
 ```bash
-cd scripts
+SKILL_SCRIPTS=~/.claude/skills/professional-kanban/scripts
 
 # Multiple-item forecasts
-python monte_carlo.py how-many --input done.csv --days 30
-python monte_carlo.py how-many --input done.csv --by 2026-10-15
-python monte_carlo.py when     --input done.csv --items 50
-python monte_carlo.py when     --input done.csv --items 50 --split 1.3   # 30% expected scope growth
+python3 "$SKILL_SCRIPTS/monte_carlo.py" how-many --input done.csv --days 30
+python3 "$SKILL_SCRIPTS/monte_carlo.py" how-many --input done.csv --by 2026-10-15
+python3 "$SKILL_SCRIPTS/monte_carlo.py" when     --input done.csv --items 50
+python3 "$SKILL_SCRIPTS/monte_carlo.py" when     --input done.csv --items 50 --split 1.3   # 30% expected scope growth
 
 # Single-item forecasting and aging
-python cycle_time.py sle   --input done.csv
-python cycle_time.py aging --input done.csv --wip in-progress.csv
+python3 "$SKILL_SCRIPTS/cycle_time.py" sle   --input done.csv
+python3 "$SKILL_SCRIPTS/cycle_time.py" aging --input done.csv --wip in-progress.csv
 ```
 
 Useful flags on both: `--from` / `--to` to choose the historical window,

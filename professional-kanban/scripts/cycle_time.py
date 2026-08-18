@@ -8,10 +8,10 @@ Answers single-item questions only:
 
 Usage
 -----
-  python cycle_time.py sle --input done.csv
-  python cycle_time.py sle --input done.csv --percentiles 50,70,85,95
-  python cycle_time.py aging --input done.csv --wip wip.csv
-  python cycle_time.py aging --input done.csv --wip wip.csv --as-of 2026-08-14
+  python3 cycle_time.py sle --input done.csv
+  python3 cycle_time.py sle --input done.csv --percentiles 50,70,85,95
+  python3 cycle_time.py aging --input done.csv --wip wip.csv
+  python3 cycle_time.py aging --input done.csv --wip wip.csv --as-of 2026-08-14
 
 Input for `sle` (--input), any of:
   (a) started + finished date columns  -> cycle time is calculated

@@ -29,15 +29,22 @@ own delivery data instead of doing the arithmetic in prose.
 
 ## Install
 
-**Claude (web, desktop, or mobile)** — download `professional-kanban.skill` from the
-[latest release](../../releases/latest) and use the *Save skill* button.
-
 **Claude Code** — clone this repo into your skills directory:
 
 ```bash
 git clone https://github.com/ProKanban/professional-kanban-skill.git
 cp -r professional-kanban-skill/professional-kanban ~/.claude/skills/
 ```
+
+That installs the skill at **user scope**: it loads in every project on your
+machine, and a user-scope skill takes precedence over a same-named project
+skill. If you'd rather scope it to a single project, copy it to
+`.claude/skills/professional-kanban/` inside that project instead.
+
+**Claude (web, desktop, or mobile)** — packaged `.skill` releases are not
+published yet. Until they are, use the Claude Code install above, or paste
+`professional-kanban/SKILL.md` into a Project's instructions as a plain
+context file (same as the tools below).
 
 **ChatGPT, Cursor, Copilot, or anything else** — these tools don't load skills, but
 `professional-kanban/SKILL.md` still works as a plain context file. Paste it into a
@@ -52,14 +59,14 @@ Python 3.8+, standard library only. No pandas, no install step.
 cd professional-kanban/scripts
 
 # Multiple-item forecasts
-python monte_carlo.py how-many --input done.csv --days 30
-python monte_carlo.py how-many --input done.csv --by 2026-10-15
-python monte_carlo.py when     --input done.csv --items 50
-python monte_carlo.py when     --input done.csv --items 50 --split 1.3   # 30% scope growth
+python3 monte_carlo.py how-many --input done.csv --days 30
+python3 monte_carlo.py how-many --input done.csv --by 2026-10-15
+python3 monte_carlo.py when     --input done.csv --items 50
+python3 monte_carlo.py when     --input done.csv --items 50 --split 1.3   # 30% scope growth
 
 # Single-item forecasting and aging
-python cycle_time.py sle   --input done.csv
-python cycle_time.py aging --input done.csv --wip in-progress.csv
+python3 cycle_time.py sle   --input done.csv
+python3 cycle_time.py aging --input done.csv --wip in-progress.csv
 ```
 
 Try them against the sample data in `professional-kanban/assets/` before pointing
