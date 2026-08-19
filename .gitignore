@@ -1,4 +1,7 @@
-# Packaged release artifacts (built by `zip -r professional-kanban.zip professional-kanban/`
-# and renamed to .skill). These live only on GitHub Releases, not in git history.
-professional-kanban.zip
-professional-kanban.skill
+# Generated release artifacts and Python caches stay out of source control.
+dist/
+*.zip
+*.skill
+*.py[cod]
+__pycache__/
+.DS_Store
