@@ -1,0 +1,40 @@
+version = 1
+
+[[annotations]]
+path = [
+  "README.md",
+  "CHANGELOG.md",
+  "CONTRIBUTING.md",
+  "SECURITY.md",
+  "THIRD_PARTY_NOTICES.md",
+  "docs/**",
+  "evals/**",
+  "skills/professional-kanban/SKILL.md",
+  "skills/professional-kanban/references/**",
+]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 ProKanban.org"
+SPDX-License-Identifier = "CC-BY-SA-4.0"
+
+[[annotations]]
+path = [
+  ".agents/**",
+  ".claude-plugin/**",
+  ".codex-plugin/**",
+  ".github/**",
+  ".gitignore",
+  "REUSE.toml",
+  "scripts/**",
+  "skills/professional-kanban/agents/**",
+  "skills/professional-kanban/scripts/**",
+  "tests/**",
+]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 ProKanban.org"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = "skills/professional-kanban/assets/**"
+precedence = "override"
+SPDX-FileCopyrightText = "NONE"
+SPDX-License-Identifier = "CC0-1.0"

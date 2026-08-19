@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 ProKanban.org
+# SPDX-License-Identifier: MIT
+
 """Cycle time percentiles, SLE, and work item aging.
 
 Answers single-item questions only:

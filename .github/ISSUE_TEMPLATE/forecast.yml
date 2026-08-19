@@ -1,0 +1,46 @@
+name: Forecast correctness problem
+description: Report a statistical, horizon, percentile, or output-language defect
+title: "[forecast]: "
+labels: ["forecast"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: v1.1.0
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Provide the exact command, seed, expected result, and actual result.
+    validations:
+      required: true
+  - type: textarea
+    id: input
+    attributes:
+      label: Minimal synthetic input
+      description: A tiny deterministic fixture is better than a full export.
+    validations:
+      required: true
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      options:
+        - Incorrect decision or materially wrong forecast
+        - Incorrect validation or error handling
+        - Misleading wording or missing uncertainty
+        - Unexpected but uncertain behavior
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I used a fixed `--seed` where the command supports it.
+          required: true
+        - label: The report contains no private delivery data.
+          required: true

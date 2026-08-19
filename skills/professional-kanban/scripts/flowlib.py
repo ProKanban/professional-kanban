@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 ProKanban.org
+# SPDX-License-Identifier: MIT
+
 """Shared helpers for the Professional Kanban scripts.
 
 Standard library only, so the scripts run anywhere Python 3.11+ is installed.

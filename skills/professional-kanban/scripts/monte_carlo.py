@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 ProKanban.org
+# SPDX-License-Identifier: MIT
+
 """Monte Carlo forecasting from historical throughput.
 
 Answers multiple-item questions only:
@@ -25,11 +28,11 @@ Either shape works:
 
 Options
 -------
-  --unit day|week      sampling unit (default: day)
+  --unit day|week      sampling unit (inferred where the input declares it)
   --workdays mon-fri   which days the system runs (default: mon-fri; use "all")
   --trials 10000       number of simulated runs
   --from / --to        limit the historical window (YYYY-MM-DD)
-  --split N            split each remaining item into N (scope-growth check)
+  --split N            when only: scope-growth multiplier
   --confidence 50,70,85,95   percentiles to report
 """
 

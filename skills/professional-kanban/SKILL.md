@@ -154,14 +154,17 @@ of these is at risk?", route to age, not to effort or estimates.
 ### Percentiles as intervention triggers
 
 The SLE tells you how much age is too much age. Lower percentiles are checkpoints
-along the way. With an 85th-percentile SLE:
+along the way:
 
 - Past the **50th percentile**, an item is bigger than half of everything the system
-  has ever done. Its chance of breaching the SLE has doubled, 15% to 30%. Worth a
-  conversation.
+  has ever done. Worth a conversation.
 - Past the **70th percentile**, it is older than two-thirds of prior items and its
-  chance of breaching is now about 50%. Urgent — swarm it, split it, escalate the
-  blocker.
+  risk is elevated. Urgent — swarm it, split it, or escalate the blocker.
+
+Do not attach a universal breach percentage to either checkpoint. The aging script
+calculates the conditional observed breach rate among completed historical items
+that reached the same age. Report that empirical rate and its comparison count; if
+there are fewer than five comparable items, say that the evidence is thin.
 
 Older items are more likely to get older still. The information is worth nothing
 unless someone acts on it, so pair every aging observation with a specific action.
@@ -300,8 +303,9 @@ than re-estimating it."
 *Wrong:* "Item C looks complicated, probably another week."
 
 *Right:* "Item C has been in progress 9 days. Your 70th percentile is 8 days and your
-85th-percentile SLE is 12. Past the 70th, its chance of breaching is roughly 50%.
-That's the trigger to swarm it or split it today rather than wait and see."
+85th-percentile SLE is 12. Of the 18 completed items that reached age 9, 7 breached
+the SLE—an observed conditional rate of 39%. That's the trigger to swarm it or
+split it today rather than wait and see."
 
 ## Before answering, check
 

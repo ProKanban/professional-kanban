@@ -1,128 +1,239 @@
-# Professional Kanban — an AI skill
+# Professional Kanban
 
-A drop-in skill that stops AI assistants from inventing Kanban.
+Turn delivery-history CSVs into honest flow signals, SLEs, and probabilistic
+forecasts in ChatGPT, Codex, Claude, or Claude Code.
 
-Ask a general-purpose AI about cycle time, WIP, or "when will it be done?" and it
-answers from whatever it absorbed off the internet — mostly velocity, story points,
-burndown charts, and averages. All four are wrong for forecasting, and the answers
-look confident anyway.
+No story points. No average-based promises. No service account, telemetry, or
+hosted dependency. The bundled Python tools calculate from your data and the skill
+teaches the assistant how to explain the result without turning a forecast into a
+commitment.
 
-This skill fixes that. It reasons from the Kanban Guide and the ProKanban.org pocket
-guides, and it runs real Monte Carlo simulations and percentile calculations on your
-own delivery data instead of doing the arithmetic in prose.
+> **Ask:** “Here are my completed-items and in-progress CSVs. Which work needs
+> attention today, and how many items can we finish in the next 30 days?”
+>
+> **Get:** “ENG-2004, ENG-2003, and ENG-2002 are past the 14-day SLE—swarm,
+> split, or unblock these first. Based on raw historical throughput, there is an
+> 85% chance of completing **33 items or more** in the next 30 calendar days.”
 
-*Compiled by Liz Rettig, Professional Kanban Trainer (PKT), ProKanban.org.*
+Compiled by Liz Rettig, Professional Kanban Trainer (PKT), ProKanban.org.
 
----
+## Install in 30 seconds
+
+Download the two files from the
+[latest release](https://github.com/ProKanban/professional-kanban-skill/releases/latest):
+
+- `professional-kanban.skill` for ChatGPT
+- `professional-kanban.zip` for Claude.ai or the Chat tab in Claude Desktop
+
+### ChatGPT
+
+Open **Plugins > Skills > Create > Upload from your computer**, upload
+`professional-kanban.skill`, and start a new chat. Personal Skills are currently
+available on eligible Business, Enterprise, Healthcare, and Edu accounts; workspace
+admins can control uploads. A Personal Skill installed on desktop does not
+automatically sync to web/mobile, so upload it on each surface where you need it.
+See OpenAI's [current Skills guide](https://help.openai.com/en/articles/20001066).
+
+### Claude.ai / Claude Desktop
+
+Enable code execution, open **Customize > Skills**, choose **+ Create skill >
+Upload a skill**, and upload `professional-kanban.zip`. The same custom skill is
+available in Claude.ai and the Chat tab of Claude Desktop. Team and Enterprise
+owners can provision the ZIP organization-wide. See Anthropic's
+[current Skills guide](https://support.claude.com/en/articles/12512180-use-skills-in-claude).
+
+### Claude Code
+
+For automatic marketplace updates, run these commands inside Claude Code:
+
+```text
+/plugin marketplace add ProKanban/professional-kanban-skill
+/plugin install professional-kanban@prokanban
+/reload-plugins
+```
+
+Or install the standalone skill at user scope with GitHub CLI (preview):
+
+```bash
+gh skill install ProKanban/professional-kanban-skill professional-kanban@v1.1.0 \
+  --agent claude-code --scope user
+```
+
+### Codex
+
+Install the standalone skill at user scope with GitHub CLI (preview):
+
+```bash
+gh skill install ProKanban/professional-kanban-skill professional-kanban@v1.1.0 \
+  --agent codex --scope user
+```
+
+You can also ask `$skill-installer` in Codex to install
+`ProKanban/professional-kanban-skill`. Once the plugin is accepted into OpenAI's
+public directory, ChatGPT and Codex users can search for **Professional Kanban** in
+the Plugins browser; the release upload and direct skill install do not depend on
+that listing.
+
+`gh skill` is a GitHub CLI preview and may change. It needs a current authenticated
+GitHub CLI. The ZIP/`.skill` upload and Claude marketplace routes are independent.
+
+## Platform support
+
+| Host | Best installation | Automatic activation | Runs bundled calculations |
+|---|---|---:|---:|
+| ChatGPT web/desktop | Upload `.skill` | Yes | Yes, with Skills/code execution enabled |
+| Claude.ai / Claude Desktop Chat | Upload `.zip` | Yes | Yes, with code execution enabled |
+| Claude Code / Desktop Code | Claude plugin marketplace | Yes, or `/professional-kanban:professional-kanban` | Yes, with local Python |
+| Codex CLI / desktop / IDE | `gh skill install` or `$skill-installer` | Yes, or `$professional-kanban` | Yes, with local Python |
+| Agent Skills-compatible hosts | Install `skills/professional-kanban/` | Host-dependent | Yes, if Python execution is available |
+
+The skill follows the open [Agent Skills specification](https://agentskills.io/)
+and has separate OpenAI and Claude plugin manifests. There is one canonical skill
+directory—platform packages do not fork the instructions or calculations.
 
 ## What it does
 
-- **Routes the question correctly.** One item means cycle time percentiles; many
-  items means Monte Carlo on throughput. Getting this fork wrong is the source of
-  most bad delivery forecasts.
-- **Calculates rather than guesses.** Bundled scripts run 10,000-trial simulations
-  and nearest-rank percentiles against your CSV exports.
-- **Flags aging work.** Compares in-progress items against the 50th, 70th, and SLE
-  thresholds and says which ones need a conversation today.
-- **Keeps the language honest.** Every forecast comes out as a range plus a
-  probability — "85% chance of 31 items or more" — never a bare date.
+- Routes one-item questions to cycle-time percentiles and many-item questions to
+  Monte Carlo on throughput.
+- Flags aging WIP before it becomes late completed work.
+- Preserves zero-throughput periods and samples the raw history instead of fitting
+  a convenient distribution.
+- Expresses every result as a range plus a probability: “85% chance of 33 items or
+  more,” never a naked date or single-number promise.
+- Detects common Jira, Azure DevOps, Trello, GitHub, and spreadsheet column names.
+- Rejects ambiguous dates, invalid confidence levels, incomplete simulations, and
+  inputs that cannot support the requested analysis.
 
-## Install
+## Use it
 
-**Claude (web, desktop, or mobile)** — download `professional-kanban.skill`
-from the [latest release](../../releases/latest) and use the *Save skill* button.
+Attach completed-item data and ask naturally:
 
-**Claude Code** — clone this repo into your skills directory:
+- “Which in-progress items need attention today?”
+- “What is our 85th-percentile SLE?”
+- “How many items can we finish in the next 30 days?”
+- “When are these 50 remaining items likely to finish?”
+- “Our backlog usually grows 25% during delivery. Include that in the forecast.”
 
-```bash
-git clone https://github.com/ProKanban/professional-kanban-skill.git
-cp -r professional-kanban-skill/professional-kanban ~/.claude/skills/
-```
-
-That installs the skill at **user scope**: it loads in every project on your
-machine, and a user-scope skill takes precedence over a same-named project
-skill. If you'd rather scope it to a single project, copy it to
-`.claude/skills/professional-kanban/` inside that project instead.
-
-**ChatGPT, Cursor, Copilot, or anything else** — these tools don't load skills, but
-`professional-kanban/SKILL.md` still works as a plain context file. Paste it into a
-Project's instructions, a Custom GPT's configuration, `.cursorrules`, or
-`.github/copilot-instructions.md`.
-
-## Using the scripts
-
-Python 3.8+, standard library only. No pandas, no install step.
+The assistant selects and runs the bundled calculation. For direct CLI use,
+**Python 3.11–3.14** is supported and no third-party package is required:
 
 ```bash
-cd professional-kanban/scripts
+SKILL_DIR="skills/professional-kanban"
 
-# Multiple-item forecasts
-python3 monte_carlo.py how-many --input done.csv --days 30
-python3 monte_carlo.py how-many --input done.csv --by 2026-10-15
-python3 monte_carlo.py when     --input done.csv --items 50
-python3 monte_carlo.py when     --input done.csv --items 50 --split 1.3   # 30% scope growth
+python3 "$SKILL_DIR/scripts/monte_carlo.py" how-many \
+  --input done.csv --days 30 --start 2026-08-19 --seed 42
+python3 "$SKILL_DIR/scripts/monte_carlo.py" how-many \
+  --input weekly.csv --weeks 6
+python3 "$SKILL_DIR/scripts/monte_carlo.py" when \
+  --input done.csv --items 50 --split 1.25 --seed 42
 
-# Single-item forecasting and aging
-python3 cycle_time.py sle   --input done.csv
-python3 cycle_time.py aging --input done.csv --wip in-progress.csv
+python3 "$SKILL_DIR/scripts/cycle_time.py" sle --input done.csv
+python3 "$SKILL_DIR/scripts/cycle_time.py" aging \
+  --input done.csv --wip in-progress.csv --as-of 2026-08-19
 ```
 
-Try them against the sample data in `professional-kanban/assets/` before pointing
-them at your own export.
-
-Useful flags: `--from` / `--to` to choose the historical window, `--unit week`,
-`--workdays all`, `--confidence 50,70,85,95`, `--seed` for reproducible output.
+Use `--help` on either script for the complete, command-specific flag list. The
+example files are in `skills/professional-kanban/assets/`.
 
 ## Your data
 
-Column names are detected automatically from common Jira, Azure DevOps, Trello, and
-spreadsheet exports. Three shapes work:
+The scripts read CSV or TSV with a header row. Extra columns are ignored.
 
-| Shape | Columns | Supports |
+| Shape | Required columns | Supports |
 |---|---|---|
-| One row per finished item | `started`, `finished` | Everything |
-| One row per period | `week`, `count` | Monte Carlo only |
-| One row per item | `cycle_time` | SLE and right-sizing only |
+| One row per finished item | a completion date; start date optional | Throughput forecasts; cycle time when start exists |
+| One row per period | period/date plus count | Throughput forecasts |
+| One row per item | positive finite cycle time | SLE and right-sizing |
+| One row per WIP item | start date; item/state optional | Aging analysis |
 
-Extra columns are ignored, so an unmodified export usually works as-is. See
-`professional-kanban/references/data-prep.md` for export-specific notes, how to
-choose a historical window, and what to do when data is thin.
+ISO dates such as `2026-08-19` are the safest choice. Ambiguous numeric dates such
+as `04/05/2026` are rejected until you choose `--date-order mdy` or
+`--date-order dmy`. CLI dates (`--from`, `--to`, `--start`, `--by`, `--as-of`) are
+strict `YYYY-MM-DD`.
 
 One warning worth repeating: **`Created` is almost never your started point.** An
-item can sit in a backlog for months. Measuring from creation will overstate your
-cycle times, sometimes by an order of magnitude.
+item can sit in a backlog for months. Measuring from creation can radically
+overstate cycle time. The selected start and finish points must match the team's
+Definition of Workflow.
 
-## Sources
+See [data preparation](skills/professional-kanban/references/data-prep.md) for the
+accepted aliases, export notes, historical-window guidance, and thin-data options.
 
-Nothing here is invented.
+## Privacy and security
 
-- **The Kanban Guide** (May 2025), Orderly Disruption Limited and Daniel S. Vacanti,
-  Inc. — licensed CC BY-SA 4.0. Source of the definition of Kanban, the Definition
-  of Workflow, the four flow metrics, and the SLE definition.
-- **Kanban Pocket Guide** — ProKanban.org. Work item age, percentiles as
-  intervention triggers, right-sizing.
-- **Flow Forecasting Pocket Guide** — ProKanban.org. Monte Carlo rules, how much
-  data you need, the language of forecasting.
+The repository contains no MCP server, hosted service, analytics, telemetry,
+credential handling, or runtime package installer. **No network** request is made
+by the bundled scripts. They read only the CSV paths you provide and print results
+to standard output; they do not mutate the input files.
 
-Going deeper: the pocket guides above, and *Actionable Agile Metrics for
-Predictability* Volumes I and II.
+Your host still controls where attachments and model conversations are processed.
+Review ChatGPT or Claude workspace data controls before using sensitive delivery
+data. As with any externally downloaded skill, inspect the release and verify its
+checksum before installing it:
 
-## License
+```bash
+shasum -a 256 -c SHA256SUMS
+```
 
-Two licenses, split by material type — see [LICENSE](LICENSE) for the full terms
-and the required attribution notice.
+## Update or uninstall
 
-- **Documentation** (`SKILL.md`, `references/`, this README) — CC BY-SA 4.0.
-  The Kanban Guide is CC BY-SA 4.0, so derivative work carries ShareAlike: adapt
-  and redistribute freely, including commercially, but credit the sources and
-  license your adaptation the same way.
-- **Scripts** (`scripts/`) — MIT, so they can be embedded in other tools without
-  ShareAlike obligations.
-- **Sample data** (`assets/`) — synthetic, CC0. Use it in training material freely.
+For Claude Code marketplace installs:
 
-The ProKanban.org name and the PKT certification marks are not covered.
+```text
+/plugin marketplace update prokanban
+/plugin uninstall professional-kanban@prokanban
+```
+
+For standalone `gh skill` installs, run `gh skill update professional-kanban`.
+Pinned installs intentionally stay on their pinned version; reinstall with a newer
+tag to upgrade. To remove a standalone skill, delete its `professional-kanban/`
+directory from the host's user or project skills folder. ChatGPT and Claude upload
+installs can be disabled, replaced, or deleted from their Skills settings.
+
+## Troubleshooting
+
+**The skill does not activate.** Start a new chat/session after installing. Mention
+it explicitly with `@Professional Kanban`, `$professional-kanban`, or
+`/professional-kanban:professional-kanban`, depending on the host. Check that code
+execution/Skills are enabled by the workspace admin.
+
+**The CSV reports an ambiguous date.** Prefer ISO dates, or rerun with
+`--date-order mdy` / `--date-order dmy` after confirming the source convention.
+
+**A column is not detected.** Compare its header with the aliases in
+[data preparation](skills/professional-kanban/references/data-prep.md). Open a
+parser issue with a redacted header row and five representative rows.
+
+**A weekly forecast rejects `--days` or `--by`.** Weekly counts only justify whole
+weekly periods. Use `--weeks N`; do not prorate a weekly observation into assumed
+daily values.
+
+**The forecast says the evidence is thin or cannot complete all trials.** This is a
+data/scope finding, not an internal error. Use a representative recent history,
+confirm that some periods have positive throughput, and reduce or split the scope
+before rerunning.
+
+**Claude says `/plugin` is unknown.** Upgrade Claude Code, restart it, and retry.
+You can always use the direct ZIP or standalone skill route instead.
 
 ## Contributing
 
-Issues and pull requests welcome — particularly reports of exports that fail to
-parse, since column-name coverage only improves by seeing real ones.
+Parser samples, adversarial edge cases, and documentation corrections are welcome.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Security
+reports belong in [SECURITY.md](SECURITY.md), not a public issue.
+
+## Sources and license
+
+The instructional material is grounded in the May 2025 *Kanban Guide* and the
+ProKanban.org pocket guides. Exact authors, URLs, known licenses, and the boundary
+between quoted/derived and original material are recorded in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+- Scripts, tests, and packaging automation: MIT
+- Skill instructions, references, and repository documentation: CC BY-SA 4.0
+- Synthetic sample data: CC0-1.0
+
+See [LICENSE](LICENSE), the complete texts in `LICENSES/`, and machine-readable
+path mappings in `REUSE.toml`. These licenses grant copyright permissions only;
+they do not grant rights in the ProKanban.org name, logo, or PKT certification
+marks.
