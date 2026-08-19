@@ -1,6 +1,10 @@
 ---
 name: professional-kanban
-description: Answer questions about Kanban, flow metrics, work item age, WIP, cycle time, throughput, Service Level Expectations, forecasting, and delivery predictability using the Kanban Guide and the ProKanban.org pocket guides, and run real Monte Carlo simulations and percentile calculations on the user's own delivery data. Use this skill whenever the topic touches how long work will take, when something will be done, how many items fit in a sprint or quarter, whether a team is predictable, why work is stuck or late, how to size or split work, what to put on a Kanban board, or how to explain delivery risk to a stakeholder — including when the user frames it in Scrum, SAFe, or generic Agile terms like velocity, story points, burndown, capacity, or estimation. Also use it whenever the user supplies a CSV or Jira export of completed or in-progress work to analyse, forecast, or turn into metrics. Default to this skill for any delivery-timing question rather than answering from general Agile knowledge.
+description: Analyze Professional Kanban delivery flow from CSV data or answer questions about WIP, throughput, cycle time, work item age, SLEs, predictability, right-sizing, and probabilistic delivery forecasts. Use for one-item cycle-time questions; multi-item how-many or by-when questions; aging or stuck work; Jira, Azure DevOps, Trello, or spreadsheet exports; and Scrum, SAFe, velocity, story-point, capacity, burndown, or estimation questions that need a flow-based answer. Do not use for personal scheduling, package tracking or logistics, file transfer timing, generic probability or arithmetic, or project planning unrelated to a workflow's delivery data.
+license: See LICENSE
+metadata:
+  version: "1.1.0"
+  author: ProKanban.org
 ---
 
 # Professional Kanban
@@ -42,33 +46,34 @@ multiple-item questions.
 ## Run the scripts
 
 Do not simulate Monte Carlo in your head, and do not estimate percentiles by eye.
-Both are the exact failure this skill exists to prevent. The scripts are standard
-library only — no install step, no pandas.
+Both are the exact failure this skill exists to prevent. The scripts require
+Python 3.11 or newer and use the standard library only — no install step, no
+pandas.
 
-The scripts live inside the skill directory. Reference them by full path so
-they work no matter what the assistant's current directory is, and leave
-`--input` pointing at the user's CSV wherever they actually have it. The path
-below is the user-scope install; substitute `.claude/skills/professional-kanban/scripts/`
-if the skill is installed at project scope.
+The scripts live inside the active skill directory. Resolve that directory from
+the loaded `SKILL.md`; never guess a user-home, project, plugin-cache, or current
+working-directory path. Claude Code exposes it as `${CLAUDE_SKILL_DIR}`. On other
+Agent Skills hosts, inspect the active skill's mounted directory and substitute
+that absolute path. Keep `--input` pointing at the user's CSV.
 
 ```bash
-SKILL_SCRIPTS=~/.claude/skills/professional-kanban/scripts
+# Claude Code uses the skill directory supplied by the host.
+python3 "${CLAUDE_SKILL_DIR}/scripts/monte_carlo.py" how-many --input done.csv --days 30
+python3 "${CLAUDE_SKILL_DIR}/scripts/monte_carlo.py" how-many --input weekly.csv --weeks 6
+python3 "${CLAUDE_SKILL_DIR}/scripts/monte_carlo.py" when --input done.csv --items 50
 
-# Multiple-item forecasts
-python3 "$SKILL_SCRIPTS/monte_carlo.py" how-many --input done.csv --days 30
-python3 "$SKILL_SCRIPTS/monte_carlo.py" how-many --input done.csv --by 2026-10-15
-python3 "$SKILL_SCRIPTS/monte_carlo.py" when     --input done.csv --items 50
-python3 "$SKILL_SCRIPTS/monte_carlo.py" when     --input done.csv --items 50 --split 1.3   # 30% expected scope growth
-
-# Single-item forecasting and aging
-python3 "$SKILL_SCRIPTS/cycle_time.py" sle   --input done.csv
-python3 "$SKILL_SCRIPTS/cycle_time.py" aging --input done.csv --wip in-progress.csv
+python3 "${CLAUDE_SKILL_DIR}/scripts/cycle_time.py" sle --input done.csv
+python3 "${CLAUDE_SKILL_DIR}/scripts/cycle_time.py" aging --input done.csv --wip in-progress.csv
 ```
 
-Useful flags on both: `--from` / `--to` to choose the historical window,
-`--unit week` to sample weekly instead of daily, `--workdays all` for systems that
-run seven days, `--confidence 50,70,85,95` to change which percentiles are
-reported, `--seed` for reproducible output.
+**Monte Carlo flags:** `--days` or `--by` for daily horizons, `--weeks` for weekly
+horizons, `--unit` when completion rows need explicit aggregation, `--workdays`,
+`--confidence`, `--trials`, `--seed`, `--split`, `--from`, `--to`, and
+`--date-order`.
+
+**Cycle-time flags:** `--percentiles`, `--sle`, `--as-of`, `--from`, `--to`, and
+`--date-order`. Date-window flags require a finish-date column; they cannot be
+applied to an already-calculated cycle-time-only column.
 
 Column names are detected automatically from common Jira, Azure DevOps, Trello and
 spreadsheet exports. If the input does not load, read

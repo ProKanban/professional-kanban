@@ -1,0 +1,35 @@
+{
+  "name": "professional-kanban",
+  "version": "1.1.0",
+  "description": "Analyze Kanban flow, aging work, SLEs, and probabilistic delivery forecasts from real delivery data.",
+  "author": {
+    "name": "ProKanban.org",
+    "url": "https://prokanban.org"
+  },
+  "homepage": "https://github.com/ProKanban/professional-kanban-skill#readme",
+  "repository": "https://github.com/ProKanban/professional-kanban-skill",
+  "license": "SEE LICENSE IN LICENSE",
+  "keywords": [
+    "kanban",
+    "flow-metrics",
+    "forecasting",
+    "monte-carlo",
+    "delivery"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Professional Kanban",
+    "shortDescription": "Forecast delivery from actual flow data.",
+    "longDescription": "Use cycle-time percentiles, work-item aging, and Monte Carlo throughput simulations to answer delivery questions without story points or average-based promises.",
+    "developerName": "ProKanban.org",
+    "category": "Productivity",
+    "capabilities": ["Analyze"],
+    "websiteURL": "https://prokanban.org",
+    "defaultPrompt": [
+      "Which in-progress items need attention today?",
+      "How many items can we finish in the next 30 days?",
+      "When are these remaining items likely to finish?"
+    ],
+    "brandColor": "#1F6F5F"
+  }
+}

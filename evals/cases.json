@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "id": "positive-aging-csv",
+      "prompt": "Here are our completed and in-progress Jira exports. Which items need attention today?",
+      "should_trigger": true,
+      "expected_behaviors": ["Run cycle-time aging analysis", "Lead with aging items", "State the SLE with probability"]
+    },
+    {
+      "id": "positive-how-many",
+      "prompt": "Using our completion history, how many tickets can we deliver in the next 30 days?",
+      "should_trigger": true,
+      "expected_behaviors": ["Run Monte Carlo how-many", "Report items or more", "Include confidence"]
+    },
+    {
+      "id": "positive-when-backlog",
+      "prompt": "We have 47 items remaining. When are they likely to be done?",
+      "should_trigger": true,
+      "expected_behaviors": ["Ask for or use throughput history", "Run Monte Carlo when", "Report on or before dates"]
+    },
+    {
+      "id": "positive-single-item",
+      "prompt": "How long is this one work item likely to take once started?",
+      "should_trigger": true,
+      "expected_behaviors": ["Use cycle-time percentiles", "Do not multiply backlog counts", "State an SLE"]
+    },
+    {
+      "id": "positive-stuck-work",
+      "prompt": "Why is our work getting stuck and what should we do about the oldest cards?",
+      "should_trigger": true,
+      "expected_behaviors": ["Use work-item age", "Discuss WIP control", "Recommend an action"]
+    },
+    {
+      "id": "positive-velocity-translation",
+      "prompt": "Can you turn our Scrum velocity into a reliable release forecast?",
+      "should_trigger": true,
+      "expected_behaviors": ["Explain why throughput is preferred", "Request completed-item history", "Use probabilistic language"]
+    },
+    {
+      "id": "positive-board-policy",
+      "prompt": "Help us define a Kanban board, explicit policies, and WIP controls for this workflow.",
+      "should_trigger": true,
+      "expected_behaviors": ["Start from the Definition of Workflow", "Cover WIP control", "Avoid prescribing a generic board"]
+    },
+    {
+      "id": "positive-sle",
+      "prompt": "Calculate our 85th-percentile service level expectation from this cycle-time CSV.",
+      "should_trigger": true,
+      "expected_behaviors": ["Run cycle_time.py", "Report elapsed time and probability", "Avoid calling the SLE a commitment"]
+    },
+    {
+      "id": "negative-personal-calendar",
+      "prompt": "Can you arrange my personal calendar so I have two focus blocks tomorrow?",
+      "should_trigger": false,
+      "expected_behaviors": ["Do not invoke Professional Kanban", "Treat as personal scheduling"]
+    },
+    {
+      "id": "negative-package-tracking",
+      "prompt": "When will my UPS package be delivered?",
+      "should_trigger": false,
+      "expected_behaviors": ["Do not invoke Professional Kanban", "Treat as logistics tracking"]
+    },
+    {
+      "id": "negative-file-transfer",
+      "prompt": "How long will a 40 GB file take to copy over a 1 Gbps connection?",
+      "should_trigger": false,
+      "expected_behaviors": ["Do not invoke Professional Kanban", "Use bandwidth arithmetic"]
+    },
+    {
+      "id": "negative-probability-homework",
+      "prompt": "Explain a Monte Carlo estimate of pi for my statistics homework.",
+      "should_trigger": false,
+      "expected_behaviors": ["Do not invoke Professional Kanban", "Answer generic probability question"]
+    },
+    {
+      "id": "negative-construction-schedule",
+      "prompt": "Build a critical-path schedule for constructing a house.",
+      "should_trigger": false,
+      "expected_behaviors": ["Do not invoke Professional Kanban without workflow delivery data", "Use project scheduling methods"]
+    },
+    {
+      "id": "negative-stock-forecast",
+      "prompt": "Forecast how many shares of this stock I should buy next quarter.",
+      "should_trigger": false,
+      "expected_behaviors": ["Do not invoke Professional Kanban", "Treat as financial guidance"]
+    },
+    {
+      "id": "negative-travel-duration",
+      "prompt": "How long does it take to drive from Denver to Santa Fe?",
+      "should_trigger": false,
+      "expected_behaviors": ["Do not invoke Professional Kanban", "Treat as travel planning"]
+    },
+    {
+      "id": "negative-generic-capacity",
+      "prompt": "How many photos fit on a 256 GB memory card?",
+      "should_trigger": false,
+      "expected_behaviors": ["Do not invoke Professional Kanban", "Use storage arithmetic"]
+    }
+  ]
+}
