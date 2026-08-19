@@ -26,6 +26,7 @@ day is 1 day, not 0. An item cannot take zero days.
 """
 
 import argparse
+import math
 import sys
 from datetime import timedelta
 
@@ -34,6 +35,36 @@ import flowlib as fl
 NAME_NAMES = ["item", "name", "id", "key", "title", "ticket", "summary", "issue", "card"]
 STATE_NAMES = ["state", "status", "column", "stage", "step"]
 DEFAULT_PCTS = [50, 70, 85, 95]
+
+
+def finite_percentage(option):
+    """Build an argparse validator for a finite open-interval percentage."""
+    def parse(value):
+        try:
+            number = float(value)
+        except (TypeError, ValueError) as exc:
+            raise argparse.ArgumentTypeError(
+                "%s must be a finite number between 0 and 100" % option
+            ) from exc
+        if not math.isfinite(number) or not 0 < number < 100:
+            raise argparse.ArgumentTypeError(
+                "%s must be a finite number between 0 and 100" % option
+            )
+        return number
+    return parse
+
+
+def parse_percentiles(value):
+    """Parse and validate a comma-separated percentile list."""
+    try:
+        values = [float(part.strip()) for part in value.split(",") if part.strip()]
+    except ValueError as exc:
+        raise ValueError(
+            "--percentiles values must be finite numbers between 0 and 100"
+        ) from exc
+    if not values or any(not math.isfinite(item) or not 0 < item < 100 for item in values):
+        raise ValueError("--percentiles values must be finite numbers between 0 and 100")
+    return sorted(set(values))
 
 
 def load_cycle_times(path, window_from, window_to, date_order=None):
@@ -65,19 +96,25 @@ def load_cycle_times(path, window_from, window_to, date_order=None):
             finishes.append(f)
         source = "calculated from '%s' to '%s' (inclusive of both days)" % (start_col, finish_col)
     elif ct_col:
-        for row in rows:
+        if window_from or window_to:
+            raise ValueError(
+                "A cycle-time-only input cannot apply --from or --to without a finish-date column."
+            )
+        for row_number, row in enumerate(rows, 2):
             raw = (row.get(ct_col) or "").strip()
             if not raw:
                 skipped += 1
                 continue
             try:
                 v = float(raw)
-            except ValueError:
-                skipped += 1
-                continue
-            if v <= 0:
-                skipped += 1
-                continue
+            except ValueError as exc:
+                raise ValueError(
+                    "Row %d cycle time must be a finite positive number." % row_number
+                ) from exc
+            if not math.isfinite(v) or v <= 0:
+                raise ValueError(
+                    "Row %d cycle time must be a finite positive number." % row_number
+                )
             values.append(v)
         source = "cycle time column '%s'" % ct_col
     else:
@@ -120,6 +157,12 @@ def load_wip(path, as_of, date_order=None):
         if finished is not None:
             already_done += 1
             continue
+        if started > as_of:
+            name = (row.get(name_col) or "").strip() if name_col else "Item %d" % i
+            raise ValueError(
+                "Row %d item '%s' starts %s after the as-of date %s."
+                % (i + 1, name, started.isoformat(), as_of.isoformat())
+            )
         items.append({
             "name": (row.get(name_col) or "").strip() if name_col else "Item %d" % i,
             "state": (row.get(state_col) or "").strip() if state_col else "",
@@ -129,6 +172,13 @@ def load_wip(path, as_of, date_order=None):
     return items, not_started, already_done
 
 
+def conditional_breach_rate(values, age, sle_days):
+    """Return observed SLE breaches among completed items that reached ``age``."""
+    comparable = [value for value in values if value >= age]
+    breaches = sum(value > sle_days for value in comparable)
+    return breaches, len(comparable)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("mode", choices=["sle", "aging"])
@@ -136,14 +186,18 @@ def main():
     p.add_argument("--wip", help="aging: CSV of items currently in progress")
     p.add_argument("--as-of", help="aging: date to age against (default: today)")
     p.add_argument("--percentiles", default="50,70,85,95")
-    p.add_argument("--sle", type=float, default=85.0, help="which percentile is the SLE (default 85)")
+    p.add_argument("--sle", type=finite_percentage("--sle"), default=85.0,
+                   help="which percentile is the SLE (default 85)")
     p.add_argument("--from", dest="window_from", help="earliest finish date to include")
     p.add_argument("--to", dest="window_to", help="latest finish date to include")
     p.add_argument("--date-order", choices=["mdy", "dmy"],
                    help="interpret ambiguous numeric CSV dates as month/day or day/month")
     args = p.parse_args()
 
-    pcts = sorted(float(x) for x in args.percentiles.split(",") if x.strip())
+    try:
+        pcts = parse_percentiles(args.percentiles)
+    except ValueError as exc:
+        p.error(str(exc))
     try:
         window_from = fl.parse_date(args.window_from, strict_iso=True) if args.window_from else None
     except ValueError:
@@ -161,10 +215,10 @@ def main():
         )
     except ValueError as exc:
         p.error(str(exc))
-    table = {c: fl.percentile(values, c) for c in pcts}
-    if args.sle not in table:
-        table[args.sle] = fl.percentile(values, args.sle)
-    sle_days = table[args.sle]
+    display_pcts = sorted(set(pcts + [args.sle]))
+    table = {c: fl.percentile(values, c) for c in display_pcts}
+    thresholds = {c: fl.percentile(values, c) for c in {50.0, 70.0, args.sle}}
+    sle_days = thresholds[args.sle]
 
     out = []
     out.append("Cycle time")
@@ -204,9 +258,8 @@ def main():
     except ValueError as exc:
         p.error(str(exc))
 
-    lower = [c for c in sorted(table) if c < args.sle]
-    p50 = table.get(50)
-    p70 = table.get(70)
+    p50 = thresholds[50.0]
+    p70 = thresholds[70.0]
 
     out.append("")
     out.append("Work item age as of %s" % as_of.isoformat())
@@ -227,9 +280,20 @@ def main():
         age = item["age"]
         if age > sle_days:
             signal = "PAST THE SLE - it is now in the slowest %g%% of everything this system has done" % (100 - args.sle)
-        elif p70 is not None and age > p70:
-            signal = "past the 70th - roughly a 50% chance of breaching the SLE. Swarm it, split it, or escalate today"
-        elif p50 is not None and age > p50:
+        elif age > p70:
+            breaches, comparable = conditional_breach_rate(values, age, sle_days)
+            if comparable >= 5:
+                risk = int(round(100.0 * breaches / comparable))
+                signal = (
+                    "past the 70th - %d%% observed breach rate among %d comparable completed "
+                    "items. Swarm it, split it, or escalate today" % (risk, comparable)
+                )
+            else:
+                signal = (
+                    "past the 70th - elevated risk, but only %d comparable completed items. "
+                    "Swarm it, split it, or escalate today" % comparable
+                )
+        elif age > p50:
             signal = "past the 50th - older than half of all prior items. Worth a conversation"
         else:
             signal = "within normal range"
@@ -237,7 +301,7 @@ def main():
                    % (item["name"][:28], item["state"][:14], age, signal))
 
     breaching = [i for i in items if i["age"] > sle_days]
-    urgent = [i for i in items if p70 is not None and p70 < i["age"] <= sle_days]
+    urgent = [i for i in items if p70 < i["age"] <= sle_days]
     out.append("")
     out.append("  %d past the SLE, %d past the 70th percentile." % (len(breaching), len(urgent)))
     out.append("  Older items are more likely to get older still. The two things that reduce "
