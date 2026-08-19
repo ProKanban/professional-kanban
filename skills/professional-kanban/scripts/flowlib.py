@@ -175,13 +175,27 @@ def percentile(values, pct):
     return ordered[min(rank, len(ordered)) - 1]
 
 
-def lower_percentile(values, confidence):
-    """The 'X or more' end of a distribution.
+def lower_bound(values, confidence):
+    """Largest observed outcome met or exceeded by ``confidence`` percent."""
+    if not values:
+        raise ValueError("Cannot take a confidence bound of an empty data set")
+    if not math.isfinite(confidence) or not 0 < confidence < 100:
+        raise ValueError("Confidence must be a finite number between 0 and 100")
+    ordered = sorted(values)
+    required = confidence / 100.0
+    answer = ordered[0]
+    for candidate in sorted(set(ordered)):
+        proportion_at_or_above = sum(value >= candidate for value in ordered) / len(ordered)
+        if proportion_at_or_above >= required:
+            answer = candidate
+        else:
+            break
+    return answer
 
-    An 85% chance of 'N items or more' is the 15th percentile of simulated
-    outcomes: 85% of trials landed at or above it.
-    """
-    return percentile(values, 100 - confidence)
+
+def lower_percentile(values, confidence):
+    """Backward-compatible alias for :func:`lower_bound`."""
+    return lower_bound(values, confidence)
 
 
 def is_workday(day, workdays):

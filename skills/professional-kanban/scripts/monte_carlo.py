@@ -53,6 +53,55 @@ class ThroughputHistory:
     unit: str
 
 
+@dataclass(frozen=True)
+class SimulationRun:
+    periods: int
+    completed: bool
+
+
+def positive_integer(option):
+    """Build an argparse validator for a positive integer option."""
+    def parse(value):
+        try:
+            number = int(value)
+        except (TypeError, ValueError) as exc:
+            raise argparse.ArgumentTypeError("%s must be a positive integer" % option) from exc
+        if number <= 0:
+            raise argparse.ArgumentTypeError("%s must be a positive integer" % option)
+        return number
+    return parse
+
+
+def positive_finite(option):
+    """Build an argparse validator for a finite number greater than zero."""
+    def parse(value):
+        try:
+            number = float(value)
+        except (TypeError, ValueError) as exc:
+            raise argparse.ArgumentTypeError(
+                "%s must be a finite number greater than zero" % option
+            ) from exc
+        if not math.isfinite(number) or number <= 0:
+            raise argparse.ArgumentTypeError(
+                "%s must be a finite number greater than zero" % option
+            )
+        return number
+    return parse
+
+
+def parse_confidences(value):
+    """Parse a comma-separated list of open-interval confidence levels."""
+    try:
+        values = [float(part.strip()) for part in value.split(",") if part.strip()]
+    except ValueError as exc:
+        raise ValueError(
+            "--confidence values must be finite numbers between 0 and 100"
+        ) from exc
+    if not values or any(not math.isfinite(item) or not 0 < item < 100 for item in values):
+        raise ValueError("--confidence values must be finite numbers between 0 and 100")
+    return sorted(set(values))
+
+
 def _period_unit(column_name):
     normalized = fl.normalise(column_name)
     if "week" in normalized:
@@ -208,7 +257,7 @@ def sim_when(series, items, trials, rng, cap):
         while remaining > 0 and periods < cap:
             remaining -= rng.choice(series)
             periods += 1
-        results.append(periods)
+        results.append(SimulationRun(periods=periods, completed=remaining <= 0))
     return results
 
 
@@ -248,17 +297,20 @@ def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("mode", choices=["how-many", "when"])
     p.add_argument("--input", "-i", required=True, help="CSV of historical completions")
-    p.add_argument("--days", type=int, help="how-many: forecast horizon in calendar days")
-    p.add_argument("--weeks", type=int, help="how-many: forecast horizon in whole weeks")
+    p.add_argument("--days", type=positive_integer("--days"),
+                   help="how-many: forecast horizon in calendar days")
+    p.add_argument("--weeks", type=positive_integer("--weeks"),
+                   help="how-many: forecast horizon in whole weeks")
     p.add_argument("--by", help="how-many: forecast horizon as a date (YYYY-MM-DD)")
-    p.add_argument("--items", type=int, help="when: number of items remaining")
-    p.add_argument("--split", type=float, default=1.0,
+    p.add_argument("--items", type=positive_integer("--items"),
+                   help="when: number of items remaining")
+    p.add_argument("--split", type=positive_finite("--split"), default=1.0,
                    help="when: multiply remaining items (e.g. 1.3 for 30%% expected scope growth)")
     p.add_argument("--start", help="forecast start date (default: today)")
     p.add_argument("--unit", choices=["day", "week"], default=None,
                    help="sampling unit (normally inferred from the input)")
     p.add_argument("--workdays", default="mon-fri")
-    p.add_argument("--trials", type=int, default=10000)
+    p.add_argument("--trials", type=positive_integer("--trials"), default=10000)
     p.add_argument("--from", dest="window_from", help="earliest history to use (YYYY-MM-DD)")
     p.add_argument("--to", dest="window_to", help="latest history to use (YYYY-MM-DD)")
     p.add_argument("--confidence", default="50,70,85,95")
@@ -267,7 +319,17 @@ def main():
                    help="interpret ambiguous numeric CSV dates as month/day or day/month")
     args = p.parse_args()
 
-    workdays = fl.parse_workdays(args.workdays)
+    if args.mode == "how-many":
+        horizons = sum(value is not None for value in (args.days, args.weeks, args.by))
+        if horizons != 1:
+            p.error("choose exactly one of --days, --weeks, or --by for how-many")
+    elif args.items is None:
+        p.error("when needs --items")
+
+    try:
+        workdays = fl.parse_workdays(args.workdays)
+    except ValueError as exc:
+        p.error(str(exc))
     try:
         window_from = fl.parse_date(args.window_from, strict_iso=True) if args.window_from else None
     except ValueError:
@@ -278,7 +340,10 @@ def main():
         p.error("--to must use YYYY-MM-DD; got %r" % args.window_to)
     if window_from and window_to and window_from > window_to:
         p.error("--from must be on or before --to")
-    confidences = [float(c) for c in args.confidence.split(",") if c.strip()]
+    try:
+        confidences = parse_confidences(args.confidence)
+    except ValueError as exc:
+        p.error(str(exc))
     rng = random.Random(args.seed)
 
     try:
@@ -350,33 +415,43 @@ def main():
         out.append("  %d trials sampled from raw historical throughput" % args.trials)
         out.append("")
         for c in sorted(confidences, reverse=True):
-            n = fl.lower_percentile(results, c)
+            n = fl.lower_bound(results, c)
             out.append("  %2g%% chance of completing %d items or more" % (c, n))
         out.append("")
         headline = 85.0 if 85.0 in confidences else max(confidences)
         out.append("  Say it out loud as: \"We have %s %g%% chance of completing %d items "
                    "or more %s.\"" % (article(headline), headline,
-                                      fl.lower_percentile(results, headline), horizon))
-        out.append("  Higher confidence is always a smaller number. 100% confidence would be "
-                   "\"zero items or more\", which is why 100% is the wrong ask.")
+                                      fl.lower_bound(results, headline), horizon))
+        out.append("  Higher confidence is always a smaller or equal number.")
 
     else:
-        if not args.items:
-            raise SystemExit("when needs --items")
         items = args.items
-        effective = int(round(items * args.split))
+        effective = int(math.ceil(items * args.split))
         try:
             start = fl.parse_date(args.start, strict_iso=True) if args.start else fl.today()
         except ValueError:
             p.error("--start must use YYYY-MM-DD; got %r" % args.start)
         start = fl.next_workday(start, workdays)
 
-        cap = max(200, int(items / max(0.05, sum(series) / float(len(series)))) * 20)
-        results = sim_when(series, effective, args.trials, rng, cap)
+        mean_throughput = sum(series) / float(len(series))
+        cap = min(100_000, max(200, int(math.ceil(effective / mean_throughput)) * 20))
+        if effective > max(series) * cap:
+            p.error(
+                "forecast cannot complete within the simulation safety limit; "
+                "reduce the scope or provide a more representative history"
+            )
+        runs = sim_when(series, effective, args.trials, rng, cap)
+        if any(not run.completed for run in runs):
+            p.error(
+                "forecast cannot complete within the simulation safety limit for every trial; "
+                "reduce the scope or inspect zero-throughput periods"
+            )
+        results = [run.periods for run in runs]
 
         out.append("Forecast: when will %d items be done" % items)
         if args.split != 1.0:
-            out.append("  Scope adjustment: x%.2f applied, simulating %d items" % (args.split, effective))
+            out.append("  Scope adjustment: x%.2f applied, simulating %d item%s"
+                       % (args.split, effective, "" if effective == 1 else "s"))
         out.append("  Starting %s, %d trials sampled from raw historical throughput"
                    % (start.isoformat(), args.trials))
         out.append("")
