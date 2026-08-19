@@ -55,13 +55,17 @@ def parse_date(value, date_order=None, strict_iso=False):
     if date_order not in (None, "mdy", "dmy"):
         raise ValueError("date order must be 'mdy' or 'dmy'")
 
-    # Trim an ISO timestamp down to its date part.
-    text = re.split(r"[T ]", text)[0] if re.match(r"^\d{4}-\d{2}-\d{2}", text) else text
     if strict_iso:
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", text):
+            raise ValueError("date must use YYYY-MM-DD: %s" % text)
         try:
             return datetime.strptime(text, "%Y-%m-%d").date()
         except ValueError as exc:
             raise ValueError("date must use YYYY-MM-DD: %s" % text) from exc
+
+    # CSV exports often include ISO timestamps. Non-CLI parsing intentionally
+    # accepts those and uses their date portion.
+    text = re.split(r"[T ]", text)[0] if re.match(r"^\d{4}-\d{2}-\d{2}", text) else text
 
     iso_match = re.fullmatch(r"\d{4}([-／/])\d{1,2}\1\d{1,2}", text)
     if iso_match:
@@ -150,7 +154,10 @@ def find_column(headers, candidates, *, exclude=()):
             and not (
                 candidates is COUNT_NAMES
                 and candidate in ("completed", "delivered")
-                and len(re.findall(r"[a-z0-9]+", original.lower())) > 1
+                and any(
+                    token in {"date", "datetime", "time", "timestamp", "at", "on"}
+                    for token in re.findall(r"[a-z0-9]+", original.lower())
+                )
             )
             and _contains_candidate_token(original, candidate)
         ]
@@ -247,6 +254,8 @@ def daily_throughput(finish_dates, workdays, start=None, end=None):
     while day <= last:
         if is_workday(day, workdays):
             series.append(counts.get(day, 0))
+        if day == last:
+            break
         day += timedelta(days=1)
     return series, first, last
 
@@ -266,6 +275,8 @@ def weekly_throughput(finish_dates, start=None, end=None):
     series, week = [], first
     while week <= last:
         series.append(counts.get(week, 0))
+        if (last - week).days < 7:
+            break
         week += timedelta(days=7)
     return series, first, last
 

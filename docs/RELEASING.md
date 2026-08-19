@@ -37,7 +37,7 @@ Run from a clean checkout:
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -v
 uvx --from 'reuse[charset-normalizer]==6.2.0' reuse lint
 gh skill publish --dry-run
-claude plugin validate .
+claude plugin validate --strict .
 
 first_dir="$(mktemp -d)"
 second_dir="$(mktemp -d)"
@@ -61,9 +61,13 @@ git tag --verify v1.1.0
 git push origin v1.1.0
 ```
 
-The tag-only release workflow verifies manifest/changelog agreement, reruns tests,
-builds deterministic `.skill` and `.zip` archives, writes `SHA256SUMS`, creates a
-GitHub artifact attestation, and creates the GitHub Release with those three files.
+The tag-only release workflow requires a GitHub-verified signed annotated tag that
+points directly to a commit on `main`, plus a successful `CI` push run for that
+exact commit. Its read-only job verifies manifest/changelog agreement, reruns
+tests, builds deterministic `.skill` and `.zip` archives, and writes
+`SHA256SUMS`. A separate no-checkout job receives write/OIDC authority only after
+that work succeeds, attests the transferred artifacts, and creates the GitHub
+Release with those three files.
 If the workflow fails, fix the release on a new commit and version; do not move a
 published tag or replace assets on an immutable release.
 

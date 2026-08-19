@@ -49,6 +49,7 @@ class SkillMetadataTests(unittest.TestCase):
         text = (SKILL_ROOT / "agents" / "openai.yaml").read_text(encoding="utf-8")
         for key in ("display_name:", "short_description:", "brand_color:", "default_prompt:"):
             self.assertIn(key, text)
+        self.assertIn("$professional-kanban", text)
 
 
 class PluginManifestTests(unittest.TestCase):

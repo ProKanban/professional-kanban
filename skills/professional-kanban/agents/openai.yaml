@@ -2,4 +2,4 @@ interface:
   display_name: "Professional Kanban"
   short_description: "Forecast delivery and manage flow from real work data"
   brand_color: "#1F6F5F"
-  default_prompt: "Analyze my delivery data with Professional Kanban and lead with the work that needs attention now."
+  default_prompt: "Use $professional-kanban to analyze my delivery data and lead with the work that needs attention now."

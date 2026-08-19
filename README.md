@@ -19,11 +19,12 @@ Compiled by Liz Rettig, Professional Kanban Trainer (PKT), ProKanban.org.
 
 ## Install in 30 seconds
 
-Download the two files from the
+Download the three release assets from the
 [latest release](https://github.com/ProKanban/professional-kanban-skill/releases/latest):
 
 - `professional-kanban.skill` for ChatGPT
 - `professional-kanban.zip` for Claude.ai or the Chat tab in Claude Desktop
+- `SHA256SUMS` to verify both downloads before installation
 
 ### ChatGPT
 

@@ -182,9 +182,9 @@ Regression fixtures cover every confirmed audit defect:
 
 `scripts/build_release.py` constructs both `professional-kanban.zip` and `professional-kanban.skill` from the canonical skill. It sorts paths, normalizes timestamps, permissions, and archive roots, excludes caches, and writes SHA-256 checksums. Running it twice on an unchanged tree must produce identical bytes.
 
-CI runs on Python 3.11, 3.12, 3.13, and 3.14. It performs tests, bytecode compilation, JSON/YAML/frontmatter validation, OpenAI plugin validation, Claude plugin validation when the CLI is available, `gh skill publish --dry-run`, deterministic-build comparison, archive-content comparison, and clean install smoke tests.
+CI runs on Python 3.11, 3.12, 3.13, and 3.14. It performs tests, bytecode compilation, JSON/YAML/frontmatter validation, OpenAI plugin validation, mandatory strict Claude plugin validation with a checksum-pinned CLI, `gh skill publish --dry-run`, deterministic-build comparison, archive-content comparison, and clean install smoke tests.
 
-The release workflow runs only for semantic-version tags, rebuilds artifacts in CI, verifies the version matches both manifests and the changelog, generates checksums, and attaches the artifacts to the GitHub release. Actions will be pinned to immutable commit SHAs.
+The release workflow runs only for semantic-version tags. A read-only job verifies a signed annotated tag, main ancestry, successful exact-commit CI, manifest/changelog versions, and deterministic artifacts. A dependent no-checkout job alone receives write/OIDC authority to attest and publish those artifacts. Actions are pinned to immutable commit SHAs.
 
 `docs/RELEASING.md` requires an annotated signed tag, protected `v*` tag rules, immutable GitHub releases, successful CI, artifact attestation, marketplace validation, and fresh ChatGPT/Claude upload smoke tests. Settings that require repository-owner access are clearly marked as owner actions rather than falsely presented as branch-enforced guarantees.
 

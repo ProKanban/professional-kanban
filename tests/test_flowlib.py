@@ -34,6 +34,12 @@ class DateParsingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "YYYY-MM-DD"):
             flowlib.parse_date("13/04/2026", strict_iso=True)
 
+    def test_strict_iso_rejects_timestamp_suffixes(self):
+        for value in ("2026-08-19Tgarbage", "2026-08-19 25:99:99"):
+            with self.subTest(value=value):
+                with self.assertRaisesRegex(ValueError, "YYYY-MM-DD"):
+                    flowlib.parse_date(value, strict_iso=True)
+
 
 class ColumnDetectionTests(unittest.TestCase):
     def test_country_does_not_match_count(self):
@@ -49,6 +55,13 @@ class ColumnDetectionTests(unittest.TestCase):
         self.assertEqual(
             flowlib.find_column(headers, flowlib.FINISHED_NAMES),
             "story_finished_on",
+        )
+
+    def test_decorated_delivered_alias_is_a_count_column(self):
+        headers = {"weekending": "Week Ending", "workdelivered": "Work Delivered"}
+        self.assertEqual(
+            flowlib.find_column(headers, flowlib.COUNT_NAMES),
+            "Work Delivered",
         )
 
 

@@ -43,6 +43,14 @@ All notable changes are documented here. The format follows
   and unusable cycle-time-only filters are rejected with actionable errors.
 - Aging always computes its internal p50, p70, and SLE thresholds even when the
   displayed percentile table is customized.
+- Weekly history windows retain their observed cadence; positive non-working-day
+  counts and irregular weekly labels now fail instead of corrupting the sample.
+- Decimal scope multipliers round exactly, oversized products fail cleanly, and
+  censored trials invalidate only confidence levels that actually depend on them.
+- Release archives are line-ending independent and include their MIT notice and
+  immutable third-party provenance record.
+- Release publication now enforces a verified signed tag, `main` ancestry,
+  successful exact-SHA CI, and privilege separation between build and publish.
 
 [Unreleased]: https://github.com/ProKanban/professional-kanban-skill/compare/v1.1.0...HEAD
 [1.1.0]: https://github.com/ProKanban/professional-kanban-skill/compare/v1.0.0...v1.1.0

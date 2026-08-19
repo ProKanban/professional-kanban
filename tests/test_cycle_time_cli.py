@@ -70,6 +70,18 @@ class CycleTimeCliTests(unittest.TestCase):
         self.assertIn("WATCH-11", result.stdout)
         self.assertIn("past the 50th", result.stdout)
 
+    def test_sle_rejects_aging_only_flags(self):
+        self.assert_cli_error(
+            "--wip and --as-of are only valid with aging",
+            "sle", "--input", HISTORY, "--wip", WIP, "--as-of", "2026-08-20",
+        )
+
+    def test_missing_input_file_is_a_clean_error(self):
+        self.assert_cli_error(
+            "No such file or directory",
+            "sle", "--input", "does-not-exist.csv",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
@@ -46,11 +48,18 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.14"
           cache: ""
+      - name: Set up Node.js for Claude validation
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: "24"
+          package-manager-cache: false
       - name: Validate licensing
         run: |
           python -m pip install 'reuse[charset-normalizer]==6.2.0'
@@ -67,13 +76,17 @@ jobs:
           else
             echo "gh skill preview is not available on this runner; static skill tests passed."
           fi
-      - name: Validate with Claude CLI when available
+      - name: Install checksum-pinned Claude CLI
         run: |
-          if command -v claude >/dev/null 2>&1; then
-            claude plugin validate .
-          else
-            echo "Claude CLI is not available on this runner; manifest tests passed."
-          fi
+          package_dir="${{ runner.temp }}/claude-code-package"
+          mkdir -p "$package_dir"
+          tarball="$(npm pack --silent @anthropic-ai/claude-code@2.1.235 --pack-destination "$package_dir")"
+          actual="$(openssl dgst -sha512 -binary "$package_dir/$tarball" | openssl base64 -A)"
+          expected="poJ4l/nro9NEZEoLU1txUGMMw92m5P3o6Nh86GfaQuPryvOdKIz/ChlPaq3FDetiaXmoNit3ZkEgnQ1PN7z/dQ=="
+          test "$actual" = "$expected"
+          npm install --global "$package_dir/$tarball"
+      - name: Validate with Claude CLI
+        run: claude plugin validate --strict .
       - name: Build twice and compare every artifact
         run: |
           first_dir="${{ runner.temp }}/release-one"

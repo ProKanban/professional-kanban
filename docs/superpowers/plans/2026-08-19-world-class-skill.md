@@ -395,7 +395,7 @@ Sort paths; use the ZIP epoch timestamp; normalize files to mode `0644`; use fix
 
 - [ ] **Step 4: Add pinned CI and release workflows plus the owner-controlled release checklist**
 
-CI runs the full test suite on Python 3.11–3.14, compiles source without writing into the tree, validates JSON/frontmatter/plugins, runs `gh skill publish --dry-run` when the preview extension is available, compares two builds, inspects archives, and confirms a clean worktree. Release runs only on `v*` tags, checks manifest/changelog versions, builds once, attests artifacts, and uploads them.
+CI runs the full test suite on Python 3.11–3.14, compiles source without writing into the tree, validates JSON/frontmatter/plugins with checksum-pinned vendor tooling, runs `gh skill publish --dry-run` when the preview extension is available, compares two builds, inspects archives, and confirms a clean worktree. Release runs only on signed annotated `v*` tags whose commits are on `main` with successful exact-SHA CI; read-only verification/build and privileged no-checkout attest/publish jobs are separate.
 
 - [ ] **Step 5: Run build tests, build twice, compare checksums, and inspect both archives**
 

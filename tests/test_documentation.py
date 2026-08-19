@@ -74,6 +74,19 @@ class DocumentationTests(unittest.TestCase):
         self.assertIn("Prateek Singh", notices)
         self.assertIn("Colleen Johnson", notices)
         self.assertIn("No separate public license notice", notices)
+        self.assertEqual(
+            notices,
+            (SKILL_ROOT / "THIRD_PARTY_NOTICES.md").read_text(encoding="utf-8"),
+        )
+
+    def test_download_instructions_include_checksum_manifest(self):
+        readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        install_section = readme.split("### ChatGPT", 1)[0]
+        self.assertIn("SHA256SUMS", install_section)
+
+    def test_repository_forces_portable_line_endings(self):
+        attributes = (REPO_ROOT / ".gitattributes").read_text(encoding="utf-8")
+        self.assertIn("* text=auto eol=lf", attributes)
 
 
 if __name__ == "__main__":

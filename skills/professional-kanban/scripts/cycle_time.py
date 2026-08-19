@@ -197,9 +197,14 @@ def main():
                    help="interpret ambiguous numeric CSV dates as month/day or day/month")
     args = p.parse_args()
 
+    if args.mode == "sle" and (args.wip is not None or args.as_of is not None):
+        p.error("--wip and --as-of are only valid with aging")
+    if args.mode == "aging" and not args.wip:
+        p.error("aging needs --wip pointing at your in-progress items")
+
     try:
         pcts = parse_percentiles(args.percentiles)
-    except ValueError as exc:
+    except (OSError, ValueError) as exc:
         p.error(str(exc))
     try:
         window_from = fl.parse_date(args.window_from, strict_iso=True) if args.window_from else None
@@ -216,7 +221,7 @@ def main():
         values, finishes, skipped, source = load_cycle_times(
             args.input, window_from, window_to, args.date_order
         )
-    except ValueError as exc:
+    except (OSError, ValueError) as exc:
         p.error(str(exc))
     display_pcts = sorted(set(pcts + [args.sle]))
     table = {c: fl.percentile(values, c) for c in display_pcts}
@@ -249,16 +254,13 @@ def main():
         print("\n".join(out))
         return
 
-    if not args.wip:
-        raise SystemExit("aging needs --wip pointing at your in-progress items")
-
     try:
         as_of = fl.parse_date(args.as_of, strict_iso=True) if args.as_of else fl.today()
     except ValueError:
         p.error("--as-of must use YYYY-MM-DD; got %r" % args.as_of)
     try:
         items, not_started, already_done = load_wip(args.wip, as_of, args.date_order)
-    except ValueError as exc:
+    except (OSError, ValueError) as exc:
         p.error(str(exc))
 
     p50 = thresholds[50.0]

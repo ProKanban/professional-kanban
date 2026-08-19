@@ -2,8 +2,10 @@
 
 import hashlib
 from pathlib import Path
+import shutil
 import tempfile
 import unittest
+from unittest import mock
 import zipfile
 
 from scripts import build_release
@@ -54,6 +56,53 @@ class ReleaseBuildTests(unittest.TestCase):
                 digest, name = line.split("  ", 1)
                 actual = hashlib.sha256((output / name).read_bytes()).hexdigest()
                 self.assertEqual(digest, actual)
+
+    def test_text_line_endings_do_not_change_release_bytes(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            crlf_source = root / "crlf-source"
+            shutil.copytree(SKILL_ROOT, crlf_source)
+            for path in crlf_source.rglob("*"):
+                if path.is_file() and path.suffix in {".md", ".py", ".yaml", ".json", ".csv"}:
+                    text = path.read_text(encoding="utf-8")
+                    path.write_bytes(text.replace("\n", "\r\n").encode("utf-8"))
+            first = root / "lf.zip"
+            second = root / "crlf.zip"
+            build_release.build_archive(SKILL_ROOT, first)
+            build_release.build_archive(crlf_source, second)
+            self.assertEqual(first.read_bytes(), second.read_bytes())
+
+    def test_archive_target_cannot_be_inside_source(self):
+        with tempfile.TemporaryDirectory() as temp:
+            source = Path(temp) / "source"
+            shutil.copytree(SKILL_ROOT, source)
+            with self.assertRaisesRegex(ValueError, "outside the skill source"):
+                build_release.build_archive(source, source / "inside.zip")
+
+    def test_archive_carries_redistribution_license_and_provenance(self):
+        with tempfile.TemporaryDirectory() as temp:
+            output = self.build(Path(temp))
+            with zipfile.ZipFile(output / "professional-kanban.zip") as archive:
+                license_text = archive.read("professional-kanban/LICENSE").decode("utf-8")
+                notices = archive.read(
+                    "professional-kanban/THIRD_PARTY_NOTICES.md"
+                ).decode("utf-8")
+            self.assertIn("Permission is hereby granted, free of charge", license_text)
+            self.assertIn("No separate public license notice", notices)
+
+    def test_release_version_validates_claude_marketplace(self):
+        original = build_release._manifest_version
+
+        def drift_marketplace(path):
+            if path.name == "marketplace.json" and path.parent.name == ".claude-plugin":
+                return "0.0.0"
+            return original(path)
+
+        with mock.patch.object(
+            build_release, "_manifest_version", side_effect=drift_marketplace
+        ):
+            with self.assertRaisesRegex(ValueError, "marketplace.json declares 0.0.0"):
+                build_release.validate_release_version("v1.1.0")
 
 
 if __name__ == "__main__":

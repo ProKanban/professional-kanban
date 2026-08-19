@@ -30,6 +30,16 @@ class SimulationCompletionTests(unittest.TestCase):
         self.assertTrue(run.completed)
         self.assertEqual(run.periods, 2)
 
+    def test_only_confidences_that_depend_on_censored_trials_are_unsupported(self):
+        runs = [
+            *(monte_carlo.SimulationRun(periods=value, completed=True) for value in range(1, 10)),
+            monte_carlo.SimulationRun(periods=200, completed=False),
+        ]
+        self.assertEqual(
+            monte_carlo.unsupported_confidences(runs, [50, 85, 95]),
+            [95],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

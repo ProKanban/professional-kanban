@@ -22,6 +22,8 @@ ARCHIVE_NAMES = ("professional-kanban.skill", "professional-kanban.zip")
 ZIP_TIMESTAMP = (1980, 1, 1, 0, 0, 0)
 EXCLUDED_NAMES = {".DS_Store", "__pycache__"}
 EXCLUDED_SUFFIXES = {".pyc", ".pyo", ".swp", ".tmp"}
+TEXT_SUFFIXES = {".csv", ".json", ".md", ".py", ".txt", ".yaml", ".yml"}
+TEXT_NAMES = {"LICENSE"}
 
 
 def _source_files(source: Path) -> list[Path]:
@@ -40,12 +42,26 @@ def _source_files(source: Path) -> list[Path]:
     return sorted(files, key=lambda path: path.relative_to(source).as_posix())
 
 
+def _canonical_bytes(path: Path) -> bytes:
+    """Return checkout-independent bytes for known text resources."""
+    data = path.read_bytes()
+    if path.suffix.lower() in TEXT_SUFFIXES or path.name in TEXT_NAMES:
+        return data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return data
+
+
 def build_archive(source: Path, target: Path) -> str:
     """Build one deterministic archive and return its SHA-256 digest."""
     source = Path(source).resolve()
-    target = Path(target)
+    target = Path(target).resolve()
     if not (source / "SKILL.md").is_file():
         raise ValueError("Skill source must contain SKILL.md: %s" % source)
+    try:
+        target.relative_to(source)
+    except ValueError:
+        pass
+    else:
+        raise ValueError("Release target must be outside the skill source: %s" % target)
     target.parent.mkdir(parents=True, exist_ok=True)
 
     with zipfile.ZipFile(
@@ -62,7 +78,7 @@ def build_archive(source: Path, target: Path) -> str:
             info.external_attr = 0o100644 << 16
             archive.writestr(
                 info,
-                path.read_bytes(),
+                _canonical_bytes(path),
                 compress_type=zipfile.ZIP_DEFLATED,
                 compresslevel=9,
             )
@@ -71,7 +87,10 @@ def build_archive(source: Path, target: Path) -> str:
 
 
 def _manifest_version(path: Path) -> str:
-    return str(json.loads(path.read_text(encoding="utf-8"))["version"])
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if path.name == "marketplace.json":
+        return str(data["plugins"][0]["version"])
+    return str(data["version"])
 
 
 def validate_release_version(version: str) -> str:
@@ -86,6 +105,9 @@ def validate_release_version(version: str) -> str:
         ),
         ".claude-plugin/plugin.json": _manifest_version(
             REPO_ROOT / ".claude-plugin" / "plugin.json"
+        ),
+        ".claude-plugin/marketplace.json": _manifest_version(
+            REPO_ROOT / ".claude-plugin" / "marketplace.json"
         ),
     }
     skill_text = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")

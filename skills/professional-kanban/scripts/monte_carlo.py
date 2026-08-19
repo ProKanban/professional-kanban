@@ -38,6 +38,7 @@ Options
 
 import argparse
 from dataclasses import dataclass
+from decimal import Decimal, InvalidOperation, ROUND_CEILING
 import math
 import random
 import sys
@@ -79,12 +80,12 @@ def positive_finite(option):
     """Build an argparse validator for a finite number greater than zero."""
     def parse(value):
         try:
-            number = float(value)
-        except (TypeError, ValueError) as exc:
+            number = Decimal(value)
+        except (InvalidOperation, TypeError, ValueError) as exc:
             raise argparse.ArgumentTypeError(
                 "%s must be a finite number greater than zero" % option
             ) from exc
-        if not math.isfinite(number) or number <= 0:
+        if not number.is_finite() or number <= 0:
             raise argparse.ArgumentTypeError(
                 "%s must be a finite number greater than zero" % option
             )
@@ -152,10 +153,38 @@ def _load_period_counts(rows, period_col, count_col, date_order, window_from, wi
     if not filtered:
         raise ValueError("No throughput periods inside the chosen window.")
 
-    first = window_from or min(filtered)
-    last = window_to or max(filtered)
+    if inferred_unit == "week":
+        weekdays = {period.weekday() for period in counts}
+        if len(weekdays) != 1:
+            raise ValueError(
+                "Weekly period labels must use the same weekday; found an irregular cadence."
+            )
+        anchor_weekday = next(iter(weekdays))
+        first = min(filtered)
+        if window_from is not None:
+            first = window_from + timedelta(
+                days=(anchor_weekday - window_from.weekday()) % 7
+            )
+        last = max(filtered)
+        if window_to is not None:
+            last = window_to - timedelta(
+                days=(window_to.weekday() - anchor_weekday) % 7
+            )
+    else:
+        non_working = [
+            period
+            for period, count in filtered.items()
+            if count > 0 and not fl.is_workday(period, workdays)
+        ]
+        if non_working:
+            raise ValueError(
+                "Positive throughput appears on non-working date %s; include that day in "
+                "--workdays or correct the period data." % min(non_working).isoformat()
+            )
+        first = window_from or min(filtered)
+        last = window_to or max(filtered)
     if first > last:
-        raise ValueError("Historical window starts after it ends.")
+        raise ValueError("Historical window contains no complete periods on the observed cadence.")
 
     series = []
     period = first
@@ -163,6 +192,8 @@ def _load_period_counts(rows, period_col, count_col, date_order, window_from, wi
     while period <= last:
         if inferred_unit == "week" or fl.is_workday(period, workdays):
             series.append(filtered.get(period, 0))
+        if period == last:
+            break
         period += step
     if not series:
         raise ValueError("Historical window contains no working periods.")
@@ -171,7 +202,7 @@ def _load_period_counts(rows, period_col, count_col, date_order, window_from, wi
         series=series,
         first=first,
         last=last,
-        item_count=sum(filtered.values()),
+        item_count=sum(series),
         source="period + count columns (%s, %s)" % (period_col, count_col),
         unit=inferred_unit,
     )
@@ -264,6 +295,17 @@ def sim_when(series, items, trials, rng, cap):
     return results
 
 
+def unsupported_confidences(runs, confidences):
+    """Return requested nearest-rank percentiles that depend on censored trials."""
+    completed = sum(run.completed for run in runs)
+    total = len(runs)
+    return [
+        confidence
+        for confidence in confidences
+        if math.ceil(confidence / 100.0 * total) > completed
+    ]
+
+
 def article(n):
     """'an 85% chance' but 'a 50% chance' — small thing, but the skill's output
     gets read aloud in stand-ups."""
@@ -292,6 +334,8 @@ def working_periods_between(start, end, unit, workdays):
     while day <= end:
         if fl.is_workday(day, workdays):
             count += 1
+        if day == end:
+            break
         day += timedelta(days=1)
     return count
 
@@ -307,7 +351,7 @@ def main():
     p.add_argument("--by", help="how-many: forecast horizon as a date (YYYY-MM-DD)")
     p.add_argument("--items", type=positive_integer("--items"),
                    help="when: number of items remaining")
-    p.add_argument("--split", type=positive_finite("--split"), default=1.0,
+    p.add_argument("--split", type=positive_finite("--split"), default=None,
                    help="when: multiply remaining items (e.g. 1.3 for 30%% expected scope growth)")
     p.add_argument("--start", help="forecast start date (default: today)")
     p.add_argument("--unit", choices=["day", "week"], default=None,
@@ -323,15 +367,20 @@ def main():
     args = p.parse_args()
 
     if args.mode == "how-many":
+        if args.items is not None or args.split is not None:
+            p.error("--items and --split are only valid with when")
         horizons = sum(value is not None for value in (args.days, args.weeks, args.by))
         if horizons != 1:
             p.error("choose exactly one of --days, --weeks, or --by for how-many")
-    elif args.items is None:
-        p.error("when needs --items")
+    else:
+        if any(value is not None for value in (args.days, args.weeks, args.by)):
+            p.error("--days, --weeks, and --by are only valid with how-many")
+        if args.items is None:
+            p.error("when needs --items")
 
     try:
         workdays = fl.parse_workdays(args.workdays)
-    except ValueError as exc:
+    except (OSError, ValueError) as exc:
         p.error(str(exc))
     try:
         window_from = fl.parse_date(args.window_from, strict_iso=True) if args.window_from else None
@@ -353,7 +402,7 @@ def main():
         history = load_throughput(
             args.input, args.unit, workdays, window_from, window_to, args.date_order
         )
-    except ValueError as exc:
+    except (OSError, ValueError) as exc:
         p.error(str(exc))
 
     series = history.series
@@ -398,14 +447,20 @@ def main():
             if unit != "week":
                 p.error("--weeks requires weekly history or --unit week; use --days for daily history.")
             periods = args.weeks
-            end = start + timedelta(days=7 * args.weeks - 1)
+            try:
+                end = start + timedelta(days=7 * args.weeks - 1)
+            except OverflowError:
+                p.error("forecast date exceeds Python's supported range")
             horizon = "in the next %d week%s (%d working weeks)" % (
                 args.weeks, "" if args.weeks == 1 else "s", periods
             )
         elif args.days is not None:
             if unit == "week":
                 p.error("Weekly history cannot support a partial-week --days horizon; use --weeks.")
-            end = start + timedelta(days=args.days - 1)
+            try:
+                end = start + timedelta(days=args.days - 1)
+            except OverflowError:
+                p.error("forecast date exceeds Python's supported range")
             periods = working_periods_between(start, end, unit, workdays)
             horizon = "in the next %d day%s (%d working days)" % (
                 args.days, "" if args.days == 1 else "s", periods
@@ -429,12 +484,22 @@ def main():
 
     else:
         items = args.items
-        effective = int(math.ceil(items * args.split))
+        split = args.split if args.split is not None else Decimal("1")
+        if split > Decimal(sys.maxsize) / Decimal(items):
+            p.error("--items multiplied by --split is too large")
+        effective_decimal = Decimal(items) * split
+        if not effective_decimal.is_finite() or effective_decimal > Decimal(sys.maxsize):
+            p.error("--items multiplied by --split is too large")
+        effective = int(effective_decimal.to_integral_value(rounding=ROUND_CEILING))
         try:
             start = fl.parse_date(args.start, strict_iso=True) if args.start else fl.today()
         except ValueError:
             p.error("--start must use YYYY-MM-DD; got %r" % args.start)
-        start = fl.next_workday(start, workdays)
+        if unit == "day":
+            try:
+                start = fl.next_workday(start, workdays)
+            except OverflowError:
+                p.error("forecast date exceeds Python's supported range")
 
         mean_throughput = sum(series) / float(len(series))
         cap = min(100_000, max(200, int(math.ceil(effective / mean_throughput)) * 20))
@@ -444,28 +509,47 @@ def main():
                 "reduce the scope or provide a more representative history"
             )
         runs = sim_when(series, effective, args.trials, rng, cap)
-        if any(not run.completed for run in runs):
+        unsupported = unsupported_confidences(runs, confidences)
+        if unsupported:
             p.error(
-                "forecast cannot complete within the simulation safety limit for every trial; "
-                "reduce the scope or inspect zero-throughput periods"
+                "forecast cannot support requested confidence level(s) %s within the simulation "
+                "safety limit; reduce the scope or inspect zero-throughput periods"
+                % ",".join("%g" % value for value in unsupported)
             )
         results = [run.periods for run in runs]
 
         out.append("Forecast: when will %d items be done" % items)
-        if args.split != 1.0:
+        if split != 1:
             out.append("  Scope adjustment: x%.2f applied, simulating %d item%s"
-                       % (args.split, effective, "" if effective == 1 else "s"))
+                       % (split, effective, "" if effective == 1 else "s"))
         out.append("  Starting %s, %d trials sampled from raw historical throughput"
                    % (start.isoformat(), args.trials))
+        censored = sum(not run.completed for run in runs)
+        if censored:
+            out.append(
+                "  %d trial%s exceeded the safety horizon; requested percentiles remain "
+                "statistically supported" % (censored, "" if censored == 1 else "s")
+            )
         out.append("")
+        try:
+            dated_results = {
+                c: (
+                    fl.percentile(results, c),
+                    periods_to_date(
+                        start, fl.percentile(results, c), unit, workdays
+                    ),
+                )
+                for c in confidences
+            }
+        except OverflowError:
+            p.error("forecast date exceeds Python's supported range")
         for c in sorted(confidences):
-            periods = fl.percentile(results, c)
-            when = periods_to_date(start, periods, unit, workdays)
+            periods, when = dated_results[c]
             out.append("  %2g%% chance of finishing on or before %s  (%d working %ss)"
                        % (c, when.isoformat(), periods, unit))
         out.append("")
         top = 85.0 if 85.0 in confidences else max(confidences)
-        when = periods_to_date(start, fl.percentile(results, top), unit, workdays)
+        when = dated_results[top][1]
         out.append("  Say it out loud as: \"We have %s %g%% chance of finishing these %d items "
                    "on or before %s.\"" % (article(top), top, items, when.isoformat()))
         out.append("  \"On or before\" is not decoration. Dropping it turns a forecast into a deadline.")

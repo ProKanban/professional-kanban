@@ -91,6 +91,24 @@ class HorizonCliTests(unittest.TestCase):
         self.assertIn("0 working days", result.stdout)
         self.assertIn("85% chance of completing 0 items or more", result.stdout)
 
+    def test_weekly_when_preserves_the_requested_start_date(self):
+        result = run_cli(
+            "monte_carlo.py",
+            "when",
+            "--input",
+            WEEKLY,
+            "--items",
+            5,
+            "--start",
+            "2026-08-22",
+            "--trials",
+            10,
+            "--seed",
+            1,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("Starting 2026-08-22", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()
