@@ -11,6 +11,7 @@ import sys
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SKILL_ROOT = REPO_ROOT / "skills" / "professional-kanban"
 SCRIPTS_ROOT = SKILL_ROOT / "scripts"
+FIXTURES_ROOT = REPO_ROOT / "tests" / "fixtures"
 
 
 def import_scripts() -> None:

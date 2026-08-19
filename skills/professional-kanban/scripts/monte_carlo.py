@@ -41,7 +41,7 @@ from datetime import timedelta
 import flowlib as fl
 
 
-def load_throughput(path, unit, workdays, window_from, window_to):
+def load_throughput(path, unit, workdays, window_from, window_to, date_order=None):
     rows, headers = fl.read_rows(path)
     if not rows:
         raise SystemExit("No data rows in %s" % path)
@@ -53,8 +53,11 @@ def load_throughput(path, unit, workdays, window_from, window_to):
     # Shape (b): a period column plus an explicit count column.
     if count_col and period_col and count_col != period_col:
         dates = []
-        for row in rows:
-            day = fl.parse_date(row.get(period_col))
+        for row_number, row in enumerate(rows, 2):
+            try:
+                day = fl.parse_date(row.get(period_col), date_order=date_order)
+            except ValueError as exc:
+                raise ValueError("Row %d: %s" % (row_number, exc)) from exc
             raw = (row.get(count_col) or "").strip()
             if day is None or not raw:
                 continue
@@ -66,8 +69,14 @@ def load_throughput(path, unit, workdays, window_from, window_to):
         source = "period + count columns (%s, %s)" % (period_col, count_col)
     # Shape (a): one row per finished item.
     elif finish_col:
-        dates = [fl.parse_date(r.get(finish_col)) for r in rows]
-        dates = [d for d in dates if d is not None]
+        dates = []
+        for row_number, row in enumerate(rows, 2):
+            try:
+                completed = fl.parse_date(row.get(finish_col), date_order=date_order)
+            except ValueError as exc:
+                raise ValueError("Row %d: %s" % (row_number, exc)) from exc
+            if completed is not None:
+                dates.append(completed)
         source = "completion dates in column '%s'" % finish_col
     else:
         raise SystemExit(
@@ -172,16 +181,30 @@ def main():
     p.add_argument("--to", dest="window_to", help="latest history to use (YYYY-MM-DD)")
     p.add_argument("--confidence", default="50,70,85,95")
     p.add_argument("--seed", type=int, default=None, help="fix the RNG for reproducible output")
+    p.add_argument("--date-order", choices=["mdy", "dmy"],
+                   help="interpret ambiguous numeric CSV dates as month/day or day/month")
     args = p.parse_args()
 
     workdays = fl.parse_workdays(args.workdays)
-    window_from = fl.parse_date(args.window_from) if args.window_from else None
-    window_to = fl.parse_date(args.window_to) if args.window_to else None
+    try:
+        window_from = fl.parse_date(args.window_from, strict_iso=True) if args.window_from else None
+    except ValueError:
+        p.error("--from must use YYYY-MM-DD; got %r" % args.window_from)
+    try:
+        window_to = fl.parse_date(args.window_to, strict_iso=True) if args.window_to else None
+    except ValueError:
+        p.error("--to must use YYYY-MM-DD; got %r" % args.window_to)
+    if window_from and window_to and window_from > window_to:
+        p.error("--from must be on or before --to")
     confidences = [float(c) for c in args.confidence.split(",") if c.strip()]
     rng = random.Random(args.seed)
 
-    series, first, last, total, source = load_throughput(
-        args.input, args.unit, workdays, window_from, window_to)
+    try:
+        series, first, last, total, source = load_throughput(
+            args.input, args.unit, workdays, window_from, window_to, args.date_order
+        )
+    except ValueError as exc:
+        p.error(str(exc))
 
     out = []
     out.append("Historical data")
@@ -196,9 +219,10 @@ def main():
 
     if args.mode == "how-many":
         if args.by:
-            end = fl.parse_date(args.by)
-            if end is None:
-                raise SystemExit("Could not read --by date: %s" % args.by)
+            try:
+                end = fl.parse_date(args.by, strict_iso=True)
+            except ValueError:
+                p.error("--by must use YYYY-MM-DD; got %r" % args.by)
             start = fl.next_workday(fl.today(), workdays)
             periods = working_periods_between(start, end, args.unit, workdays)
             horizon = "on or before %s (%d working %ss)" % (end.isoformat(), periods, args.unit)
@@ -232,9 +256,10 @@ def main():
             raise SystemExit("when needs --items")
         items = args.items
         effective = int(round(items * args.split))
-        start = fl.parse_date(args.start) if args.start else fl.today()
-        if start is None:
-            raise SystemExit("Could not read --start date: %s" % args.start)
+        try:
+            start = fl.parse_date(args.start, strict_iso=True) if args.start else fl.today()
+        except ValueError:
+            p.error("--start must use YYYY-MM-DD; got %r" % args.start)
         start = fl.next_workday(start, workdays)
 
         cap = max(200, int(items / max(0.05, sum(series) / float(len(series)))) * 20)

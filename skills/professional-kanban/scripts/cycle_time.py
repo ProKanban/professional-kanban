@@ -36,7 +36,7 @@ STATE_NAMES = ["state", "status", "column", "stage", "step"]
 DEFAULT_PCTS = [50, 70, 85, 95]
 
 
-def load_cycle_times(path, window_from, window_to):
+def load_cycle_times(path, window_from, window_to, date_order=None):
     rows, headers = fl.read_rows(path)
     start_col = fl.find_column(headers, fl.STARTED_NAMES)
     finish_col = fl.find_column(headers, fl.FINISHED_NAMES)
@@ -45,8 +45,12 @@ def load_cycle_times(path, window_from, window_to):
     values, finishes, skipped = [], [], 0
 
     if start_col and finish_col:
-        for row in rows:
-            s, f = fl.parse_date(row.get(start_col)), fl.parse_date(row.get(finish_col))
+        for row_number, row in enumerate(rows, 2):
+            try:
+                s = fl.parse_date(row.get(start_col), date_order=date_order)
+                f = fl.parse_date(row.get(finish_col), date_order=date_order)
+            except ValueError as exc:
+                raise ValueError("Row %d: %s" % (row_number, exc)) from exc
             if s is None or f is None:
                 skipped += 1
                 continue
@@ -87,7 +91,7 @@ def load_cycle_times(path, window_from, window_to):
     return values, finishes, skipped, source
 
 
-def load_wip(path, as_of):
+def load_wip(path, as_of, date_order=None):
     rows, headers = fl.read_rows(path)
     start_col = fl.find_column(headers, fl.STARTED_NAMES)
     if not start_col:
@@ -101,11 +105,19 @@ def load_wip(path, as_of):
 
     items, not_started, already_done = [], 0, 0
     for i, row in enumerate(rows, 1):
-        started = fl.parse_date(row.get(start_col))
+        try:
+            started = fl.parse_date(row.get(start_col), date_order=date_order)
+            finished = (
+                fl.parse_date(row.get(finish_col), date_order=date_order)
+                if finish_col
+                else None
+            )
+        except ValueError as exc:
+            raise ValueError("Row %d: %s" % (i + 1, exc)) from exc
         if started is None:
             not_started += 1  # Age applies only to items in progress.
             continue
-        if finish_col and fl.parse_date(row.get(finish_col)) is not None:
+        if finished is not None:
             already_done += 1
             continue
         items.append({
@@ -127,13 +139,28 @@ def main():
     p.add_argument("--sle", type=float, default=85.0, help="which percentile is the SLE (default 85)")
     p.add_argument("--from", dest="window_from", help="earliest finish date to include")
     p.add_argument("--to", dest="window_to", help="latest finish date to include")
+    p.add_argument("--date-order", choices=["mdy", "dmy"],
+                   help="interpret ambiguous numeric CSV dates as month/day or day/month")
     args = p.parse_args()
 
     pcts = sorted(float(x) for x in args.percentiles.split(",") if x.strip())
-    window_from = fl.parse_date(args.window_from) if args.window_from else None
-    window_to = fl.parse_date(args.window_to) if args.window_to else None
+    try:
+        window_from = fl.parse_date(args.window_from, strict_iso=True) if args.window_from else None
+    except ValueError:
+        p.error("--from must use YYYY-MM-DD; got %r" % args.window_from)
+    try:
+        window_to = fl.parse_date(args.window_to, strict_iso=True) if args.window_to else None
+    except ValueError:
+        p.error("--to must use YYYY-MM-DD; got %r" % args.window_to)
+    if window_from and window_to and window_from > window_to:
+        p.error("--from must be on or before --to")
 
-    values, finishes, skipped, source = load_cycle_times(args.input, window_from, window_to)
+    try:
+        values, finishes, skipped, source = load_cycle_times(
+            args.input, window_from, window_to, args.date_order
+        )
+    except ValueError as exc:
+        p.error(str(exc))
     table = {c: fl.percentile(values, c) for c in pcts}
     if args.sle not in table:
         table[args.sle] = fl.percentile(values, args.sle)
@@ -168,10 +195,14 @@ def main():
     if not args.wip:
         raise SystemExit("aging needs --wip pointing at your in-progress items")
 
-    as_of = fl.parse_date(args.as_of) if args.as_of else fl.today()
-    if as_of is None:
-        raise SystemExit("Could not read --as-of date: %s" % args.as_of)
-    items, not_started, already_done = load_wip(args.wip, as_of)
+    try:
+        as_of = fl.parse_date(args.as_of, strict_iso=True) if args.as_of else fl.today()
+    except ValueError:
+        p.error("--as-of must use YYYY-MM-DD; got %r" % args.as_of)
+    try:
+        items, not_started, already_done = load_wip(args.wip, as_of, args.date_order)
+    except ValueError as exc:
+        p.error(str(exc))
 
     lower = [c for c in sorted(table) if c < args.sle]
     p50 = table.get(50)
