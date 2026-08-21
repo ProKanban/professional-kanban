@@ -8,6 +8,19 @@ from tests.support import REPO_ROOT, SKILL_ROOT
 
 
 class DocumentationTests(unittest.TestCase):
+    def test_readme_leads_with_branded_value_and_install_path(self):
+        readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        hero = REPO_ROOT / "docs" / "assets" / "readme-hero.svg"
+
+        self.assertTrue(hero.is_file())
+        self.assertIn('src="docs/assets/readme-hero.svg"', readme)
+        self.assertIn("## Why Professional Kanban?", readme)
+        self.assertIn("## See it in action", readme)
+        self.assertLess(
+            readme.index("## Install in 30 seconds"),
+            readme.index("## What it does"),
+        )
+
     def test_readme_has_current_install_paths_and_support_matrix(self):
         readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
         for required in (
