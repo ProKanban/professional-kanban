@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="520" viewBox="0 0 1280 520" role="img" aria-labelledby="title description">
+  <title id="title">Professional Kanban — flow metrics you can defend</title>
+  <desc id="description">A dark blue banner showing aging work and an 85 percent throughput forecast beside the Professional Kanban name.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#08111f"/>
+      <stop offset="0.52" stop-color="#0d1b32"/>
+      <stop offset="1" stop-color="#102743"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#51e2c2"/>
+      <stop offset="1" stop-color="#79b8ff"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#142b49" stop-opacity="0.96"/>
+      <stop offset="1" stop-color="#0e1e34" stop-opacity="0.96"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0" stop-color="#45d7be" stop-opacity="0.26"/>
+      <stop offset="1" stop-color="#45d7be" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1280" height="520" rx="28" fill="url(#background)"/>
+  <circle cx="1110" cy="72" r="290" fill="url(#glow)"/>
+  <circle cx="170" cy="570" r="310" fill="url(#glow)" opacity="0.55"/>
+
+  <g opacity="0.07" stroke="#d7e9ff">
+    <path d="M0 104H1280M0 208H1280M0 312H1280M0 416H1280"/>
+    <path d="M160 0V520M320 0V520M480 0V520M640 0V520M800 0V520M960 0V520M1120 0V520"/>
+  </g>
+
+  <g font-family="Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif">
+    <g transform="translate(72 74)">
+      <rect width="48" height="48" rx="14" fill="url(#accent)"/>
+      <rect x="11" y="12" width="7" height="24" rx="3.5" fill="#08111f"/>
+      <rect x="21" y="8" width="7" height="28" rx="3.5" fill="#08111f"/>
+      <rect x="31" y="17" width="7" height="19" rx="3.5" fill="#08111f"/>
+      <text x="64" y="31" fill="#9eb4cc" font-size="18" font-weight="700" letter-spacing="2.4">PROFESSIONAL KANBAN</text>
+    </g>
+
+    <text x="72" y="208" fill="#f6fbff" font-size="58" font-weight="760" letter-spacing="-2.1">Flow metrics</text>
+    <text x="72" y="274" fill="url(#accent)" font-size="58" font-weight="760" letter-spacing="-2.1">you can defend.</text>
+    <text x="74" y="332" fill="#b6c8dc" font-size="21">Evidence-based SLEs, aging signals, and</text>
+    <text x="74" y="363" fill="#b6c8dc" font-size="21">probabilistic forecasts—without story points.</text>
+
+    <g transform="translate(72 410)" font-size="14" font-weight="700" letter-spacing="0.4">
+      <g>
+        <rect width="148" height="38" rx="19" fill="#142c49" stroke="#2a4a69"/>
+        <circle cx="21" cy="19" r="4" fill="#51e2c2"/>
+        <text x="34" y="24" fill="#dcecff">AGENT SKILL</text>
+      </g>
+      <g transform="translate(160)">
+        <rect width="174" height="38" rx="19" fill="#142c49" stroke="#2a4a69"/>
+        <circle cx="21" cy="19" r="4" fill="#79b8ff"/>
+        <text x="34" y="24" fill="#dcecff">PYTHON 3.11–3.14</text>
+      </g>
+      <g transform="translate(346)">
+        <rect width="150" height="38" rx="19" fill="#142c49" stroke="#2a4a69"/>
+        <circle cx="21" cy="19" r="4" fill="#a78bfa"/>
+        <text x="34" y="24" fill="#dcecff">NO NETWORK</text>
+      </g>
+    </g>
+
+    <g transform="translate(778 52)">
+      <rect width="430" height="416" rx="28" fill="url(#card)" stroke="#294765"/>
+      <text x="28" y="42" fill="#dcecff" font-size="13" font-weight="750" letter-spacing="1.8">FLOW HEALTH</text>
+      <circle cx="378" cy="34" r="5" fill="#51e2c2"/>
+      <text x="390" y="39" fill="#8ca5bf" font-size="12">LIVE</text>
+      <path d="M28 60H402" stroke="#2a4562"/>
+
+      <text x="28" y="92" fill="#8ca5bf" font-size="13" font-weight="650">AGING WIP</text>
+      <g transform="translate(28 110)">
+        <rect width="238" height="42" rx="10" fill="#193652"/>
+        <text x="14" y="26" fill="#e8f4ff" font-size="13" font-weight="650">ENG-2011</text>
+        <rect x="252" width="116" height="42" rx="10" fill="#143e42"/>
+        <text x="291" y="26" fill="#6ff0d0" font-size="13" font-weight="750">3 days</text>
+      </g>
+      <g transform="translate(28 160)">
+        <rect width="238" height="42" rx="10" fill="#193652"/>
+        <text x="14" y="26" fill="#e8f4ff" font-size="13" font-weight="650">ENG-2007</text>
+        <rect x="252" width="116" height="42" rx="10" fill="#3f3729"/>
+        <text x="291" y="26" fill="#ffd27a" font-size="13" font-weight="750">9 days</text>
+      </g>
+      <g transform="translate(28 210)">
+        <rect width="238" height="42" rx="10" fill="#193652"/>
+        <text x="14" y="26" fill="#e8f4ff" font-size="13" font-weight="650">ENG-2004</text>
+        <rect x="252" width="116" height="42" rx="10" fill="#4a2936"/>
+        <text x="284" y="26" fill="#ff9ab5" font-size="13" font-weight="750">16 days</text>
+      </g>
+
+      <text x="28" y="290" fill="#8ca5bf" font-size="13" font-weight="650">30-DAY FORECAST</text>
+      <text x="28" y="348" fill="#f6fbff" font-size="48" font-weight="760" letter-spacing="-1.5">85%</text>
+      <text x="136" y="329" fill="#6ff0d0" font-size="16" font-weight="750">≥ 33 items</text>
+      <text x="136" y="351" fill="#8ca5bf" font-size="13">from raw throughput history</text>
+      <path d="M28 384C77 379 96 360 137 365S207 390 252 371S315 326 402 317" fill="none" stroke="url(#accent)" stroke-width="4" stroke-linecap="round"/>
+      <path d="M28 384C77 379 96 360 137 365S207 390 252 371S315 326 402 317V392H28Z" fill="url(#accent)" opacity="0.09"/>
+    </g>
+  </g>
+</svg>

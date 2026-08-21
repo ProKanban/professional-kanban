@@ -1,0 +1,39 @@
+name: Documentation or platform support
+description: Correct instructions, source attribution, installation, or compatibility
+title: "[docs]: "
+labels: ["documentation"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - ChatGPT or Codex
+        - Claude.ai or Claude Desktop
+        - Claude Code
+        - Data preparation
+        - Kanban guidance or stakeholder language
+        - Licensing or provenance
+        - Other documentation
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is inaccurate or unclear?
+    validations:
+      required: true
+  - type: textarea
+    id: correction
+    attributes:
+      label: Suggested correction and authoritative source
+      description: Link current first-party product documentation when applicable.
+    validations:
+      required: true
+  - type: checkboxes
+    id: provenance
+    attributes:
+      label: Provenance
+      options:
+        - label: I have identified quoted or adapted third-party material and its license.
+          required: true

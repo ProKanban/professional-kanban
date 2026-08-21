@@ -1,0 +1,54 @@
+name: Parser problem
+description: Report a CSV/TSV shape, date, or column-detection problem
+title: "[parser]: "
+labels: ["parser"]
+body:
+  - type: markdown
+    attributes:
+      value: "Use synthetic or redacted rows only. Never upload customer delivery data."
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: v1.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: command
+    attributes:
+      label: Command
+      options:
+        - monte_carlo.py how-many
+        - monte_carlo.py when
+        - cycle_time.py sle
+        - cycle_time.py aging
+    validations:
+      required: true
+  - type: textarea
+    id: sample
+    attributes:
+      label: Minimal redacted input
+      description: Include the header and about five synthetic rows in a code block.
+    validations:
+      required: true
+  - type: textarea
+    id: command_line
+    attributes:
+      label: Exact command and output
+      description: Include the full error, but remove sensitive paths and data.
+    validations:
+      required: true
+  - type: input
+    id: python
+    attributes:
+      label: Python and operating system
+      placeholder: Python 3.13.5, macOS 15
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Data safety
+      options:
+        - label: I confirm the issue contains no real customer data, credentials, or personal information.
+          required: true

@@ -1,0 +1,44 @@
+# Professional Kanban skill licensing
+
+- `SKILL.md` and `references/`: CC BY-SA 4.0
+- `scripts/` and `agents/`: MIT
+- Synthetic CSV files in `assets/`: CC0 1.0
+
+Complete legal text for the Creative Commons material:
+
+- CC BY-SA 4.0: https://creativecommons.org/licenses/by-sa/4.0/legalcode
+- CC0 1.0: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+Attribution for the instructional material:
+
+> “Professional Kanban skill” by Liz Rettig and contributors, ProKanban.org,
+> licensed under CC BY-SA 4.0. Derived in part from *The Kanban Guide* (May 2025)
+> by Orderly Disruption Limited and Daniel S. Vacanti, Inc., licensed under
+> CC BY-SA 4.0. Source details are available at
+> [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+These licenses grant copyright permissions only. They do not grant rights in the
+ProKanban.org name, logo, Professional Kanban Trainer (PKT), or related
+certification marks.
+
+## MIT License
+
+Copyright (c) 2026 ProKanban.org
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

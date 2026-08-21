@@ -1,6 +1,9 @@
+# SPDX-FileCopyrightText: 2026 ProKanban.org
+# SPDX-License-Identifier: MIT
+
 """Shared helpers for the Professional Kanban scripts.
 
-Standard library only, so the scripts run anywhere Python 3.8+ is installed.
+Standard library only, so the scripts run anywhere Python 3.11+ is installed.
 No pandas, no numpy, no install step.
 """
 
@@ -25,9 +28,7 @@ CYCLETIME_NAMES = ["cycletime", "flowtime", "leadtime", "days", "duration", "ela
 PERIOD_NAMES = ["date", "week", "weekending", "period", "day", "month"]
 
 DATE_FORMATS = [
-    "%Y-%m-%d", "%Y/%m/%d", "%d/%m/%Y", "%m/%d/%Y", "%d-%m-%Y", "%m-%d-%Y",
     "%d %b %Y", "%d %B %Y", "%b %d %Y", "%B %d %Y", "%d-%b-%Y", "%Y%m%d",
-    "%m/%d/%y", "%d/%m/%y",
 ]
 
 
@@ -35,15 +36,72 @@ def normalise(name):
     return re.sub(r"[^a-z0-9]", "", (name or "").lower())
 
 
-def parse_date(value):
-    """Parse a date from a string. Returns a date, or None if unparseable."""
+def parse_date(value, date_order=None, strict_iso=False):
+    """Parse a date, rejecting ambiguous numeric day/month ordering.
+
+    ISO dates are always accepted. Numeric dates with the year last are
+    inferred only when one component is greater than 12; otherwise callers
+    must choose ``mdy`` or ``dmy`` explicitly.
+    """
     if value is None:
         return None
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
     text = str(value).strip()
     if not text:
         return None
-    # Trim an ISO timestamp down to its date part.
+    if date_order not in (None, "mdy", "dmy"):
+        raise ValueError("date order must be 'mdy' or 'dmy'")
+
+    if strict_iso:
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", text):
+            raise ValueError("date must use YYYY-MM-DD: %s" % text)
+        try:
+            return datetime.strptime(text, "%Y-%m-%d").date()
+        except ValueError as exc:
+            raise ValueError("date must use YYYY-MM-DD: %s" % text) from exc
+
+    # CSV exports often include ISO timestamps. Non-CLI parsing intentionally
+    # accepts those and uses their date portion.
     text = re.split(r"[T ]", text)[0] if re.match(r"^\d{4}-\d{2}-\d{2}", text) else text
+
+    iso_match = re.fullmatch(r"\d{4}([-／/])\d{1,2}\1\d{1,2}", text)
+    if iso_match:
+        separator = iso_match.group(1)
+        try:
+            return datetime.strptime(text, f"%Y{separator}%m{separator}%d").date()
+        except ValueError:
+            return None
+
+    numeric = re.fullmatch(r"(\d{1,2})([/-])(\d{1,2})\2(\d{2}|\d{4})", text)
+    if numeric:
+        first, separator, second, year = numeric.groups()
+        first_number, second_number = int(first), int(second)
+        order = date_order
+        if order is None:
+            if first_number <= 12 and second_number <= 12:
+                raise ValueError(
+                    "ambiguous date '%s'; use --date-order mdy or --date-order dmy" % text
+                )
+            if first_number > 12 and second_number <= 12:
+                order = "dmy"
+            elif second_number > 12 and first_number <= 12:
+                order = "mdy"
+            else:
+                return None
+        year_format = "%y" if len(year) == 2 else "%Y"
+        format_string = (
+            f"%m{separator}%d{separator}{year_format}"
+            if order == "mdy"
+            else f"%d{separator}%m{separator}{year_format}"
+        )
+        try:
+            return datetime.strptime(text, format_string).date()
+        except ValueError:
+            return None
+
     for fmt in DATE_FORMATS:
         try:
             return datetime.strptime(text, fmt).date()
@@ -66,16 +124,49 @@ def read_rows(path):
     return rows, headers
 
 
-def find_column(headers, candidates):
-    """Return the original header name for the first candidate that matches."""
+def _contains_candidate_token(original, candidate):
+    """Return whether a normalized candidate spans complete header tokens."""
+    tokens = re.findall(r"[a-z0-9]+", (original or "").lower())
+    for start in range(len(tokens)):
+        combined = ""
+        for token in tokens[start:]:
+            combined += token
+            if combined == candidate:
+                return True
+            if len(combined) >= len(candidate):
+                break
+    return False
+
+
+def find_column(headers, candidates, *, exclude=()):
+    """Return an exact or token-boundary column match in candidate order."""
+    excluded = set(exclude)
     for candidate in candidates:
-        if candidate in headers:
+        if candidate in headers and headers[candidate] not in excluded:
             return headers[candidate]
-    # Fall back to a substring match (e.g. "story_finished_on").
+    # Fall back to complete tokens (e.g. "story_finished_on"), never arbitrary
+    # substrings such as count in Country or Account.
     for candidate in candidates:
-        for norm, original in headers.items():
-            if candidate in norm:
-                return original
+        matches = [
+            original
+            for original in headers.values()
+            if original not in excluded
+            and not (
+                candidates is COUNT_NAMES
+                and candidate in ("completed", "delivered")
+                and any(
+                    token in {"date", "datetime", "time", "timestamp", "at", "on"}
+                    for token in re.findall(r"[a-z0-9]+", original.lower())
+                )
+            )
+            and _contains_candidate_token(original, candidate)
+        ]
+        if len(matches) > 1:
+            raise ValueError(
+                "Multiple columns match '%s': %s" % (candidate, ", ".join(matches))
+            )
+        if matches:
+            return matches[0]
     return None
 
 
@@ -94,13 +185,27 @@ def percentile(values, pct):
     return ordered[min(rank, len(ordered)) - 1]
 
 
-def lower_percentile(values, confidence):
-    """The 'X or more' end of a distribution.
+def lower_bound(values, confidence):
+    """Largest observed outcome met or exceeded by ``confidence`` percent."""
+    if not values:
+        raise ValueError("Cannot take a confidence bound of an empty data set")
+    if not math.isfinite(confidence) or not 0 < confidence < 100:
+        raise ValueError("Confidence must be a finite number between 0 and 100")
+    ordered = sorted(values)
+    required = confidence / 100.0
+    answer = ordered[0]
+    for candidate in sorted(set(ordered)):
+        proportion_at_or_above = sum(value >= candidate for value in ordered) / len(ordered)
+        if proportion_at_or_above >= required:
+            answer = candidate
+        else:
+            break
+    return answer
 
-    An 85% chance of 'N items or more' is the 15th percentile of simulated
-    outcomes: 85% of trials landed at or above it.
-    """
-    return percentile(values, 100 - confidence)
+
+def lower_percentile(values, confidence):
+    """Backward-compatible alias for :func:`lower_bound`."""
+    return lower_bound(values, confidence)
 
 
 def is_workday(day, workdays):
@@ -149,6 +254,8 @@ def daily_throughput(finish_dates, workdays, start=None, end=None):
     while day <= last:
         if is_workday(day, workdays):
             series.append(counts.get(day, 0))
+        if day == last:
+            break
         day += timedelta(days=1)
     return series, first, last
 
@@ -168,6 +275,8 @@ def weekly_throughput(finish_dates, start=None, end=None):
     series, week = [], first
     while week <= last:
         series.append(counts.get(week, 0))
+        if (last - week).days < 7:
+            break
         week += timedelta(days=7)
     return series, first, last
 

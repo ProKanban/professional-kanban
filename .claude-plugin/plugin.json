@@ -1,0 +1,13 @@
+{
+  "name": "professional-kanban",
+  "version": "1.1.0",
+  "description": "Analyze Kanban flow, aging work, SLEs, and probabilistic delivery forecasts from real delivery data.",
+  "author": {
+    "name": "ProKanban.org",
+    "url": "https://prokanban.org"
+  },
+  "homepage": "https://github.com/ProKanban/professional-kanban-skill#readme",
+  "repository": "https://github.com/ProKanban/professional-kanban-skill",
+  "license": "SEE LICENSE IN LICENSE",
+  "keywords": ["kanban", "flow-metrics", "forecasting", "monte-carlo", "delivery"]
+}

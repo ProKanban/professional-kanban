@@ -58,8 +58,11 @@ ENG-2004,Blocked,2026-07-06
 
 ## Column detection
 
-Headers are matched case-insensitively, ignoring spaces, underscores and hyphens,
-including as substrings — so `Story Finished On` matches.
+Headers are matched case-insensitively after spaces, underscores, and hyphens are
+normalized. Exact aliases are preferred; fallback matching uses complete normalized
+tokens, so `Story Finished On` matches `finished` while unrelated headers such as
+`Country` and `Account` do not match `count`. If equally plausible columns exist,
+rename the intended one instead of relying on column order.
 
 | Role | Recognised names |
 |---|---|
@@ -71,10 +74,18 @@ including as substrings — so `Story Finished On` matches.
 | Item name | item, name, id, key, title, ticket, summary, issue, card |
 | State | state, status, column, stage, step |
 
-Dates are parsed in ISO, US, UK, and written-month formats, and ISO timestamps are
-trimmed to their date part. If a file will not load, the error prints the headers
-it actually saw — rename the relevant column and re-run rather than reformatting the
+ISO and written-month dates are parsed directly, and ISO timestamps are trimmed to
+their date part. Numeric dates where both the first and second component are 12 or
+less are ambiguous: `04/05/2026` fails until `--date-order mdy` or
+`--date-order dmy` is supplied. Prefer ISO `YYYY-MM-DD` whenever possible. CLI date
+options are always strict ISO. If a file will not load, the error prints the headers
+it actually saw—rename the relevant column and rerun rather than reformatting the
 whole file.
+
+For period/count files, zero counts are real observations and remain in the sample.
+Missing periods between the first and last observation are also represented as zero.
+Use a `week` or `week ending` header for weekly data; weekly forecasts use
+`--weeks`, while daily completion data uses `--days` or `--by`.
 
 ## Exports from common tools
 
@@ -140,13 +151,17 @@ A labelled guess that gets refined beats a confident number with nothing behind 
 is the process telling you where it hurts. That is signal, and removing it makes the
 forecast optimistic in exactly the way that gets teams in trouble.
 
-Remove data only when it is genuinely invalid:
+Remove or correct data only when it is genuinely invalid:
 
 - A ticket nobody closed, marked done months after the work finished
 - A period when the workflow was not yet defined
 - Duplicates, or test and template items that never represented real work
-- Items with a finish date before their start date — the scripts skip these and
-  report the count
+- Items with a finish date before their start date—the scripts exclude these and
+  report the skipped-row count; correct the source record when possible
+
+Already-calculated cycle-time input must contain positive finite numbers. Zero,
+negative values, `NaN`, and infinities are rejected. `--from` / `--to` cannot be
+used with cycle-time-only input because there is no finish date to filter honestly.
 
 Do not transform, normalize, or fit throughput to a known distribution. Sample the
 raw data.
