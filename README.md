@@ -42,7 +42,7 @@ teaches the assistant how to select the right method and explain the result.
 >
 > “ENG-2004, ENG-2003, and ENG-2002 are past the 14-day SLE—swarm, split, or
 > unblock these first. Based on raw historical throughput, there is an 85% chance
-> of completing **33 items or more** in the next 30 calendar days.”
+> of completing **32 items or more** in the next 30 calendar days.”
 
 The assistant chooses the calculation, runs it, and returns the decision signal
 with its assumptions—not just a number.

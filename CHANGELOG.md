@@ -6,7 +6,7 @@ All notable changes are documented here. The format follows
 
 ## [Unreleased]
 
-## [1.1.0] - 2026-08-19
+## [1.1.0] - 2026-10-15
 
 ### Added
 
@@ -30,6 +30,11 @@ All notable changes are documented here. The format follows
   workday values fail instead of being silently accepted.
 - **Breaking:** the skill moved from `professional-kanban/` to the standard
   `skills/professional-kanban/` path.
+- **Breaking:** `--workdays` now defaults to `all`, so daily forecasts sample
+  calendar days, the same clock cycle time already uses. Pass `--workdays mon-fri`
+  for a system that genuinely does not run at weekends.
+- `gh skill install` commands are no longer pinned to a version and the
+  repository is referenced as `ProKanban/professional-kanban` throughout.
 - Forecast bounds now use exact at-or-above probabilities and never label capped,
   unfinished trials as completed.
 - Column fallback matching uses token boundaries and no longer mistakes headers
@@ -37,6 +42,9 @@ All notable changes are documented here. The format follows
 
 ### Fixed
 
+- Daily forecasts no longer discard completions that land on a non-working day.
+  In weekday mode they count on the next working day (or the window's last
+  working day), and the header flags any gap between sampled and total items.
 - Leading and trailing zero-throughput periods are retained.
 - Daily horizons cover exactly the stated number of calendar days.
 - WIP starts after the analysis date, non-finite cycle times, reversed windows,

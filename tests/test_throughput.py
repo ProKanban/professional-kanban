@@ -3,7 +3,7 @@
 from datetime import date
 import unittest
 
-from tests.support import FIXTURES_ROOT, import_scripts
+from tests.support import FIXTURES_ROOT, import_scripts, run_cli
 
 import_scripts()
 import flowlib  # noqa: E402
@@ -85,6 +85,41 @@ class ThroughputLoadingTests(unittest.TestCase):
                 None,
                 flowlib.parse_workdays("mon-fri"),
             )
+
+
+class WeekendCompletionTests(unittest.TestCase):
+    """A completion finished on a non-working day is real output, never discarded."""
+
+    FIXTURE = FIXTURES_ROOT / "weekend-completions.csv"
+
+    def test_all_days_samples_every_calendar_day(self):
+        history = monte_carlo.load_throughput(
+            self.FIXTURE, None, flowlib.parse_workdays("all"), None, None, None
+        )
+        self.assertEqual(history.series, [2, 1, 0, 1, 0, 2, 1, 1, 0, 2, 0, 0, 1, 2])
+        self.assertEqual(history.item_count, 13)
+
+    def test_weekday_mode_folds_weekend_finishes_into_the_next_working_day(self):
+        series, first, last = flowlib.daily_throughput(
+            [date(2026, 6, 5), date(2026, 6, 6), date(2026, 6, 7), date(2026, 6, 8)],
+            flowlib.parse_workdays("mon-fri"),
+        )
+        self.assertEqual(series, [1, 3])
+
+    def test_weekday_mode_folds_a_trailing_weekend_into_the_last_working_day(self):
+        history = monte_carlo.load_throughput(
+            self.FIXTURE, None, flowlib.parse_workdays("mon-fri"), None, None, None
+        )
+        self.assertEqual(history.series, [2, 1, 0, 1, 0, 4, 0, 2, 0, 3])
+        self.assertEqual(sum(history.series), history.item_count)
+
+    def test_default_workdays_sample_calendar_days(self):
+        result = run_cli(
+            "monte_carlo.py", "how-many", "--input", self.FIXTURE,
+            "--days", 7, "--trials", 10, "--seed", 1,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("Items completed: 13 over 14 days", result.stdout)
 
 
 if __name__ == "__main__":

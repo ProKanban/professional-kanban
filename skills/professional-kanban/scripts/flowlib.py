@@ -215,7 +215,7 @@ def is_workday(day, workdays):
 def parse_workdays(spec):
     """'mon-fri' -> {0,1,2,3,4}; 'all' -> every day; 'mon,tue,wed' also works."""
     names = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
-    spec = (spec or "mon-fri").strip().lower()
+    spec = (spec or "all").strip().lower()
     if spec in ("all", "every", "7", "everyday"):
         return set(range(7))
     if "-" in spec and "," not in spec:
@@ -240,23 +240,27 @@ def daily_throughput(finish_dates, workdays, start=None, end=None):
 
     Days with zero completions are included on purpose: they are real
     observations of the system, and dropping them inflates the forecast.
-    Non-working days are excluded entirely rather than counted as zeros.
+    Non-working days are excluded rather than counted as zeros, but a
+    completion that lands on one is never discarded: it counts on the next
+    working day, or on the last working day when the window ends first.
     """
     if not finish_dates:
         raise ValueError("No completion dates found")
     first = start or min(finish_dates)
     last = end or max(finish_dates)
-    counts = {}
-    for d in finish_dates:
-        if first <= d <= last:
-            counts[d] = counts.get(d, 0) + 1
-    series, day = [], first
+    working, day = [], first
     while day <= last:
         if is_workday(day, workdays):
-            series.append(counts.get(day, 0))
+            working.append(day)
         if day == last:
             break
         day += timedelta(days=1)
+    counts = {}
+    for d in finish_dates:
+        if first <= d <= last and working:
+            bucket = next((w for w in working if w >= d), working[-1])
+            counts[bucket] = counts.get(bucket, 0) + 1
+    series = [counts.get(day, 0) for day in working]
     return series, first, last
 
 

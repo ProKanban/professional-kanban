@@ -29,7 +29,8 @@ Either shape works:
 Options
 -------
   --unit day|week      sampling unit (inferred where the input declares it)
-  --workdays mon-fri   which days the system runs (default: mon-fri; use "all")
+  --workdays all       which days the system runs (default: all; e.g. "mon-fri";
+                       non-working-day finishes count on the next working day)
   --trials 10000       number of simulated runs
   --from / --to        limit the historical window (YYYY-MM-DD)
   --split N            when only: scope-growth multiplier
@@ -356,7 +357,8 @@ def main():
     p.add_argument("--start", help="forecast start date (default: today)")
     p.add_argument("--unit", choices=["day", "week"], default=None,
                    help="sampling unit (normally inferred from the input)")
-    p.add_argument("--workdays", default="mon-fri")
+    p.add_argument("--workdays", default="all",
+                   help="days the system runs (default: all; e.g. mon-fri)")
     p.add_argument("--trials", type=positive_integer("--trials"), default=10000)
     p.add_argument("--from", dest="window_from", help="earliest history to use (YYYY-MM-DD)")
     p.add_argument("--to", dest="window_to", help="latest history to use (YYYY-MM-DD)")
@@ -418,6 +420,9 @@ def main():
     out.append("  Window:  %s to %s" % (first.isoformat(), last.isoformat()))
     out.append("  Items completed: %d over %d %ss (%d %ss with zero)"
                % (total, len(series), unit, sum(1 for v in series if v == 0), unit))
+    if sum(series) != total:
+        out.append("  ! Only %d of those %d items are in the sample; %d fall outside "
+                   "the sampled %ss." % (sum(series), total, total - sum(series), unit))
     out.append("  Throughput per %s: min %d, median %g, max %d"
                % (unit, min(series), fl.percentile(series, 50), max(series)))
     warn_about_data(series, unit, out)
