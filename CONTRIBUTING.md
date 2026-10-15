@@ -10,8 +10,8 @@ Requirements: Git and Python 3.11–3.14. The runtime and test suite use only th
 Python standard library.
 
 ```bash
-git clone https://github.com/ProKanban/professional-kanban-skill.git
-cd professional-kanban-skill
+git clone https://github.com/ProKanban/professional-kanban.git
+cd professional-kanban
 python3 -m unittest discover -v
 ```
 

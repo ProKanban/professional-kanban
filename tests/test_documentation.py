@@ -30,7 +30,7 @@ class DocumentationTests(unittest.TestCase):
             "Claude Code",
             "Codex",
             "professional-kanban.skill",
-            "/plugin marketplace add ProKanban/professional-kanban-skill",
+            "/plugin marketplace add ProKanban/professional-kanban",
             "Customize > Skills",
             "Python 3.11",
             "No network",
@@ -94,8 +94,14 @@ class DocumentationTests(unittest.TestCase):
 
     def test_download_instructions_include_checksum_manifest(self):
         readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
-        install_section = readme.split("### ChatGPT", 1)[0]
+        install_section = readme.split("## Platform support", 1)[0]
         self.assertIn("SHA256SUMS", install_section)
+        self.assertLess(readme.index("### Codex"), readme.index("SHA256SUMS"))
+
+    def test_readme_install_commands_are_unpinned(self):
+        readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertNotIn("professional-kanban@v", readme)
+        self.assertNotIn("ProKanban/professional-kanban-skill", readme)
 
     def test_repository_forces_portable_line_endings(self):
         attributes = (REPO_ROOT / ".gitattributes").read_text(encoding="utf-8")

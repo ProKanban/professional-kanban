@@ -82,6 +82,8 @@ class HorizonCliTests(unittest.TestCase):
             "2026-08-22",
             "--days",
             1,
+            "--workdays",
+            "mon-fri",
             "--trials",
             10,
             "--seed",

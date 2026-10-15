@@ -42,33 +42,39 @@ teaches the assistant how to select the right method and explain the result.
 >
 > “ENG-2004, ENG-2003, and ENG-2002 are past the 14-day SLE—swarm, split, or
 > unblock these first. Based on raw historical throughput, there is an 85% chance
-> of completing **33 items or more** in the next 30 calendar days.”
+> of completing **32 items or more** in the next 30 calendar days.”
 
 The assistant chooses the calculation, runs it, and returns the decision signal
 with its assumptions—not just a number.
 
 ## Install in 30 seconds
 
-Download the release assets from the
-[latest release](https://github.com/ProKanban/professional-kanban-skill/releases/latest):
+Find your host, copy what is in its row, and start a new chat or session.
 
-| Where you work | Fastest installation | Download |
+| Where you work | What you install | Do this |
 |---|---|---|
-| ChatGPT | Upload a Personal Skill | `professional-kanban.skill` |
-| Claude.ai / Claude Desktop Chat | Upload a custom skill | `professional-kanban.zip` |
-| Claude Code / Desktop Code | Add the Claude plugin marketplace | No manual download |
-| Codex CLI / desktop / IDE | Install with `gh skill` or `$skill-installer` | No manual download |
+| ChatGPT | An uploaded Personal Skill | Download [`professional-kanban.skill`](https://github.com/ProKanban/professional-kanban/releases/latest/download/professional-kanban.skill), then upload it at **Plugins > Skills > Create > Upload from your computer** |
+| Claude.ai / Claude Desktop Chat | An uploaded custom skill | Download [`professional-kanban.zip`](https://github.com/ProKanban/professional-kanban/releases/latest/download/professional-kanban.zip), then upload it at **Customize > Skills > + Create skill > Upload a skill** |
+| Claude Code / Desktop Code | A plugin, from the `prokanban` marketplace | `/plugin marketplace add ProKanban/professional-kanban`<br>`/plugin install professional-kanban@prokanban`<br>`/reload-plugins` |
+| Codex CLI / desktop / IDE | A standalone skill | `gh skill install ProKanban/professional-kanban professional-kanban --agent codex --scope user` |
 
-Download `SHA256SUMS` with either package and verify it before installation:
+Every route installs the same skill: the same instructions, references, and
+scripts from `skills/professional-kanban/`. Only the packaging differs. Claude
+Code calls it a *plugin*, Claude.ai calls it a *custom skill*, and ChatGPT calls it
+a *Personal Skill*.
 
-```bash
-shasum -a 256 -c SHA256SUMS
-```
+> [!NOTE]
+> Professional Kanban is not yet listed in Anthropic's or OpenAI's plugin
+> directories, so searching for it inside Claude, ChatGPT, or Codex will not find
+> it yet. Use the route for your host above.
 
 ### ChatGPT
 
-Open **Plugins > Skills > Create > Upload from your computer**, upload
-`professional-kanban.skill`, and start a new chat.
+You install an **uploaded Personal Skill**. Download
+[`professional-kanban.skill`](https://github.com/ProKanban/professional-kanban/releases/latest/download/professional-kanban.skill)
+from the [latest release](https://github.com/ProKanban/professional-kanban/releases/latest),
+open **Plugins > Skills > Create > Upload from your computer**, upload it, and start
+a new chat.
 
 Personal Skills are currently available on eligible Business, Enterprise,
 Healthcare, and Edu accounts; workspace admins can control uploads. A Personal
@@ -78,8 +84,11 @@ on each surface where you need it. See OpenAI's
 
 ### Claude.ai / Claude Desktop
 
-Enable code execution, open **Customize > Skills**, choose **+ Create skill >
-Upload a skill**, upload `professional-kanban.zip`, and start a new chat.
+You install an **uploaded custom skill**. Download
+[`professional-kanban.zip`](https://github.com/ProKanban/professional-kanban/releases/latest/download/professional-kanban.zip)
+from the [latest release](https://github.com/ProKanban/professional-kanban/releases/latest),
+enable code execution, open **Customize > Skills**, choose **+ Create skill >
+Upload a skill**, upload the ZIP, and start a new chat.
 
 The same custom skill is available in Claude.ai and the Chat tab of Claude Desktop.
 Team and Enterprise owners can provision the ZIP organization-wide. See Anthropic's
@@ -87,40 +96,57 @@ Team and Enterprise owners can provision the ZIP organization-wide. See Anthropi
 
 ### Claude Code
 
-For automatic marketplace updates, run these commands inside Claude Code:
+You install a **plugin** named `professional-kanban` from a marketplace named
+`prokanban`. For automatic marketplace updates, run these commands inside Claude
+Code:
 
 ```text
-/plugin marketplace add ProKanban/professional-kanban-skill
+/plugin marketplace add ProKanban/professional-kanban
 /plugin install professional-kanban@prokanban
 /reload-plugins
 ```
 
-Or install the standalone skill at user scope with GitHub CLI (preview):
+The skill activates on its own when you ask a delivery question. To call it
+explicitly, use `/professional-kanban:professional-kanban`. That is not a typo:
+Claude Code names a plugin's skills `plugin:skill`, and both the plugin and its one
+skill are called `professional-kanban`.
+
+Or install the standalone skill at user scope with GitHub CLI (preview), without
+the plugin:
 
 ```bash
-gh skill install ProKanban/professional-kanban-skill professional-kanban@v1.1.0 \
+gh skill install ProKanban/professional-kanban professional-kanban \
   --agent claude-code --scope user
 ```
 
 ### Codex
 
-Install the standalone skill at user scope with GitHub CLI (preview):
+You install a **standalone skill**. Install it at user scope with GitHub CLI
+(preview):
 
 ```bash
-gh skill install ProKanban/professional-kanban-skill professional-kanban@v1.1.0 \
+gh skill install ProKanban/professional-kanban professional-kanban \
   --agent codex --scope user
 ```
 
 You can also ask `$skill-installer` in Codex to install
-`ProKanban/professional-kanban-skill`. Once the plugin is accepted into OpenAI's
-public directory, ChatGPT and Codex users can search for **Professional Kanban** in
-the Plugins browser; the release upload and direct skill install do not depend on
-that listing.
+`ProKanban/professional-kanban`. Both commands install the latest release; append
+`@vX.Y.Z` to the skill name only if you need to pin a version.
 
 > [!NOTE]
 > `gh skill` is a GitHub CLI preview and may change. It needs a current,
 > authenticated GitHub CLI. The ZIP/`.skill` upload and Claude marketplace routes
 > are independent.
+
+### Verify a download
+
+Each release publishes a `SHA256SUMS` file alongside `professional-kanban.skill`
+and `professional-kanban.zip`. Download it into the same folder as the package and
+check before you upload:
+
+```bash
+shasum -a 256 -c --ignore-missing SHA256SUMS
+```
 
 ## Platform support
 

@@ -67,7 +67,8 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/cycle_time.py" aging --input done.csv --wip
 ```
 
 **Monte Carlo flags:** `--days` or `--by` for daily horizons, `--weeks` for weekly
-horizons, `--unit` when completion rows need explicit aggregation, `--workdays`,
+horizons, `--unit` when completion rows need explicit aggregation, `--workdays`
+(default `all`; use `mon-fri` only when the system genuinely stops at weekends),
 `--confidence`, `--trials`, `--seed`, `--split`, `--from`, `--to`, and
 `--date-order`.
 

@@ -61,7 +61,7 @@ class PluginManifestTests(unittest.TestCase):
         self.assertEqual(manifest["name"], "professional-kanban")
         self.assertEqual(manifest["version"], "1.1.0")
         self.assertEqual(manifest["skills"], "./skills/")
-        self.assertEqual(manifest["repository"], "https://github.com/ProKanban/professional-kanban-skill")
+        self.assertEqual(manifest["repository"], "https://github.com/ProKanban/professional-kanban")
         self.assertNotIn("apps", manifest)
         self.assertNotIn("mcpServers", manifest)
 
