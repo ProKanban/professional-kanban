@@ -52,5 +52,5 @@ All notable changes are documented here. The format follows
 - Release publication now enforces a verified signed tag, `main` ancestry,
   successful exact-SHA CI, and privilege separation between build and publish.
 
-[Unreleased]: https://github.com/ProKanban/professional-kanban-skill/compare/v1.1.0...HEAD
-[1.1.0]: https://github.com/ProKanban/professional-kanban-skill/compare/v1.0.0...v1.1.0
+[Unreleased]: https://github.com/ProKanban/professional-kanban/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/ProKanban/professional-kanban/compare/v1.0.0...v1.1.0

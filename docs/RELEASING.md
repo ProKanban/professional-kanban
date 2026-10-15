@@ -27,7 +27,8 @@ warning as an owner action, not as a condition a pull request can silently fix.
    `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`,
    `skills/professional-kanban/SKILL.md`, and `CHANGELOG.md`.
 3. Replace the changelog's release date and leave a fresh `[Unreleased]` section.
-4. Confirm the README's pinned installation command names the release being made.
+4. Confirm the README's install commands still carry no version pin, so they
+   resolve to the release being made.
 
 ## Verify before tagging
 

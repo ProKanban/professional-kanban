@@ -6,8 +6,8 @@
     "name": "ProKanban.org",
     "url": "https://prokanban.org"
   },
-  "homepage": "https://github.com/ProKanban/professional-kanban-skill#readme",
-  "repository": "https://github.com/ProKanban/professional-kanban-skill",
+  "homepage": "https://github.com/ProKanban/professional-kanban#readme",
+  "repository": "https://github.com/ProKanban/professional-kanban",
   "license": "SEE LICENSE IN LICENSE",
   "keywords": ["kanban", "flow-metrics", "forecasting", "monte-carlo", "delivery"]
 }
