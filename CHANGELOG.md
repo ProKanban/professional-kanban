@@ -42,6 +42,8 @@ All notable changes are documented here. The format follows
 
 ### Fixed
 
+- The how-many horizon shows a working-day count only in weekday mode, where it
+  differs from the calendar days requested.
 - Daily forecasts no longer discard completions that land on a non-working day.
   In weekday mode they count on the next working day (or the window's last
   working day), and the header flags any gap between sampled and total items.
