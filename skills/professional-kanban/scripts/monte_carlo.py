@@ -467,9 +467,9 @@ def main():
             except OverflowError:
                 p.error("forecast date exceeds Python's supported range")
             periods = working_periods_between(start, end, unit, workdays)
-            horizon = "in the next %d day%s (%d working days)" % (
-                args.days, "" if args.days == 1 else "s", periods
-            )
+            horizon = "in the next %d day%s" % (args.days, "" if args.days == 1 else "s")
+            if len(workdays) < 7:
+                horizon += " (%d working days)" % periods
         else:
             raise SystemExit("how-many needs --days, --weeks, or --by")
 

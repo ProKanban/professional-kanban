@@ -112,5 +112,26 @@ class HorizonCliTests(unittest.TestCase):
         self.assertIn("Starting 2026-08-22", result.stdout)
 
 
+
+class HorizonLabelTests(unittest.TestCase):
+    """The working-day bracket only carries information in weekday mode."""
+
+    def forecast(self, *extra):
+        result = run_cli(
+            "monte_carlo.py", "how-many", "--input", DAILY, "--start", "2026-08-24",
+            "--days", 20, "--trials", 10, "--seed", 1, *extra,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result.stdout
+
+    def test_all_days_horizon_has_no_redundant_bracket(self):
+        stdout = self.forecast()
+        self.assertIn("in the next 20 days\n", stdout)
+        self.assertIn('in the next 20 days."', stdout)
+        self.assertNotIn("working days", stdout)
+
+    def test_weekday_horizon_keeps_the_working_day_count(self):
+        self.assertIn("in the next 20 days (15 working days)", self.forecast("--workdays", "mon-fri"))
+
 if __name__ == "__main__":
     unittest.main()
