@@ -58,6 +58,11 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("id-token: write", publish)
         self.assertIn("attestations: write", publish)
 
+    def test_release_publish_names_repo_without_a_checkout(self):
+        publish = self.workflow("release.yml").split("  publish:", 1)[1]
+        create = publish.split("gh release create", 1)[1]
+        self.assertIn('--repo "$GITHUB_REPOSITORY"', create)
+
     def test_release_enforces_signed_tag_main_ancestry_and_exact_ci(self):
         workflow = self.workflow("release.yml")
         for evidence in (

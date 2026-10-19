@@ -134,6 +134,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
             dist/professional-kanban.skill \
             dist/professional-kanban.zip \
             dist/SHA256SUMS \

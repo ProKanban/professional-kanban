@@ -6,6 +6,11 @@ All notable changes are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- The release workflow now names the repository when publishing, so a tag push
+  publishes its release without a manual step.
+
 ## [1.1.0] - 2026-10-15
 
 ### Added
